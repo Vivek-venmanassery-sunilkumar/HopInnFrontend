@@ -7,7 +7,7 @@ import { useOtpVerify, useSignUpInitiation } from '@/hooks/auth/auth';
 import OTPModal from './OTPModal';
 import { VALIDATION_PATTERNS } from '@/constants/validation';
 
-export default function SignUpForm() {
+export default function SignUpForm({ onSwitchToLogin }) {
     const { mutate: initiateSignUp, isLoading} = useSignUpInitiation();
     const { mutate: verifyOTP} = useOtpVerify();
     const [showOTPModal, setShowOTPModal] = useState(false);
@@ -59,6 +59,9 @@ export default function SignUpForm() {
             onSuccess: ()=>{
                 setShowOTPModal(false)
                 setOtpError(false)
+                if (onSwitchToLogin) {
+                    onSwitchToLogin();
+                }
             },
             onSettled: ()=>{
                 setIsVerifyingOTP(false);

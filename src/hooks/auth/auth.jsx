@@ -1,4 +1,4 @@
-import { initiateSignUp, verifyOTP, retryOTP } from "@/services/auth/auth";
+import { initiateSignUp, verifyOTP, retryOTP, login } from "@/services/auth/auth";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -12,9 +12,8 @@ export function useSignUpInitiation(){
             console.log("Otp send in mail:", data)
         },
         onError: (error)=>{
-            const errorMessage = error || 'An error occurred during sign up. Please try again.';
+            const errorMessage = error.message || 'An error occurred during sign up. Please try again.';
             toast.error(errorMessage);
-            console.error("Signup initiation failed:", error);
         }
     })
 }
@@ -42,6 +41,21 @@ export function useResendOTP(){
         },
         onError: (error)=>{
             toast.error(error.message)
+        }
+    })
+}
+
+
+export function useLogin(){
+    return useMutation({
+        mutationFn: login,
+        onSuccess: (data)=>{
+            const message = data?.message || 'Login successful'
+            toast.success(message)
+        },
+        onError: (error)=>{
+            const message = error?.message || 'Login failed'
+            toast.error(message)
         }
     })
 }

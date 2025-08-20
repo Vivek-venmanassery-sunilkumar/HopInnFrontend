@@ -37,3 +37,16 @@ export const retryOTP = async (data) =>{
         throw new Error(serverMessage || error.message)
     }
 }
+
+
+export const login  = async (data)=>{
+    try{
+        const response = await authApi.post('auth/login', {...data});
+        if(response.status === 200){
+            return response.data
+        }
+    }catch(error){
+        const serverMessage = error.response?.data?.detail?.message;
+        throw new Error(serverMessage || error.message)
+    }
+}
