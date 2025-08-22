@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useResendOTP } from '@/hooks/auth/auth';
+import { useResendOTP } from '@/hooks/auth/AuthHooks';
 
 export default function OTPModal({ isOpen, onClose, onVerifyOTP, isLoading, toggleInitialOTPState, email }) {
     const initialOTPState = ['', '', '', '', '', '']

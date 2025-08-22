@@ -1,4 +1,4 @@
-import { initiateSignUp, verifyOTP, retryOTP, login } from "@/services/auth/auth";
+import { initiateSignUp, verifyOTP, retryOTP, login } from "@/services/auth/AuthService";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 

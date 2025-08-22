@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useLogin } from '@/hooks/auth/auth';
+import { useLogin } from '@/hooks/auth/AuthHooks';
 import { useDispatch } from 'react-redux';
 import { setUser } from '@/redux/slices/authSlice';
 import { useNavigate } from 'react-router-dom';

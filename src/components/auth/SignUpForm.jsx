@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useOtpVerify, useSignUpInitiation } from '@/hooks/auth/auth';
+import { useOtpVerify, useSignUpInitiation } from '@/hooks/auth/AuthHooks';
 import OTPModal from './OTPModal';
 import { VALIDATION_PATTERNS } from '@/constants/validation';
 
