@@ -16,4 +16,8 @@ export const VALIDATION_PATTERNS = {
         value: /^[A-Za-zÀ-ÿ'\-\s]+$/,
         message: 'First name must contain only letters or valid characters',
     },
+    PASSWORD: {
+        value: /^(?=.*\d).{8,}$/,
+        message: 'Password must have atleast one number'
+    }
 }

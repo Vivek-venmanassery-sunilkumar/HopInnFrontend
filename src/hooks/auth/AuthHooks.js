@@ -37,6 +37,7 @@ export function useResendOTP(){
         mutationFn: retryOTP,
         onSuccess: (data)=>{
             const message = data?.message || 'OTP resent successfully'
+            console.log('I am inside the onSuccess of the useMutation hook of the useResendOTP custom hook')
             toast.success(message)
         },
         onError: (error)=>{
@@ -54,7 +55,9 @@ export function useLogin(){
             toast.success(message)
         },
         onError: (error)=>{
-            const message = error?.message || 'Login failed'
+            const message = error.message || 'Login failed'
+            console.log(message)
+            console.log('I am inside the onError inside the useLogin mutation.')
             toast.error(message)
         }
     })

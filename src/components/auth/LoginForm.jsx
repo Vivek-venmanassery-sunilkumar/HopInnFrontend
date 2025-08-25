@@ -16,6 +16,7 @@ export default function LoginForm() {
 
     const onSubmit = async (data) => {
         const response = await login(data);
+        console.log('I am here inside the loginform component, after the mutateasync.')
         const authData = response?.data?.user ?? response?.data?.data?.user ?? response?.user ?? response?.data ?? response;
         const payload = {
             id: authData.id,
@@ -58,7 +59,8 @@ export default function LoginForm() {
                     className={`${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
                     {...register('password', {
                         required: 'Password is required',
-                        minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                        minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                        pattern:VALIDATION_PATTERNS.PASSWORD
                     })}
                 />
                 {errors.password && (

@@ -79,6 +79,7 @@ export default function OTPModal({ isOpen, onClose, onVerifyOTP, isLoading, togg
             onSuccess: ()=>{
                 setTimeLeft(60);
                 setOtp(initialOTPState);
+                console.log('I am here inside the onSuccess of the retrysendotp mutate funciton of the otpmodal component')
                 // Focus first input after resend
                 if (inputRefs.current[0]) {
                     inputRefs.current[0].focus();
