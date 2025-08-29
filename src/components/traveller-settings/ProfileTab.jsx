@@ -5,14 +5,17 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useProfile, useUpdateProfile } from '@/hooks/traveller-profile/TravellerProfileHooks'
 import { uploadToCloudinary } from '@/lib/cloudinaryUtils'
+import { useQueryClient } from '@tanstack/react-query'
 import ProfileImageUpload from './ProfileImageUpload'
 
 export default function ProfileTab() {
+    const queryClient = useQueryClient()
     const { data: profile, isLoading } = useProfile()
     const updateProfileMutation = useUpdateProfile()
     const [profileImage, setProfileImage] = useState(null)
     const [uploadError, setUploadError] = useState(null)
     const [isUploadingImage, setIsUploadingImage] = useState(false)
+    const [tempProfileImageUrl, setTempProfileImageUrl] = useState(null)
 
     const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
         defaultValues: {
@@ -31,6 +34,7 @@ export default function ProfileTab() {
                 email: profile.email || '',
                 phoneNumber: profile.phoneNumber || '',
             })
+            setTempProfileImageUrl(null) // Reset temp URL when profile data is loaded
         }
     }, [profile, reset])
 
@@ -47,6 +51,8 @@ export default function ProfileTab() {
                     const uploadResult = await uploadToCloudinary(profileImage)
                     updateData.profileImageUrl = uploadResult.imageUrl
                     updateData.profileImagePublicId = uploadResult.publicId
+                    // Store the temporary URL to show immediately
+                    setTempProfileImageUrl(uploadResult.imageUrl)
                 } catch (error) {
                     console.error('Cloudinary upload failed:', error)
                     setUploadError(error.message || 'Failed to upload image. Please try again.')
@@ -57,11 +63,23 @@ export default function ProfileTab() {
                 }
             }
             
-            await updateProfileMutation.mutateAsync(updateData)
-            setProfileImage(null) // Reset after successful upload
+            // The backend now returns the updated profile data
+            const updatedProfile = await updateProfileMutation.mutateAsync(updateData)
+            
+            // Update the local cache with the returned data
+            queryClient.setQueryData(['profile'], updatedProfile)
+            
+            // Reset all temporary states
+            setProfileImage(null)
+            setTempProfileImageUrl(null)
+            
         } catch (error) {
             console.error('Error updating profile:', error)
             setUploadError(error.message || 'Failed to update profile')
+            // Revert the temporary image URL on error
+            if (profileImage) {
+                setTempProfileImageUrl(null)
+            }
         }
     }
 
@@ -76,8 +94,9 @@ export default function ProfileTab() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div className="flex justify-center mb-6">
                         <ProfileImageUpload
-                            currentImageUrl={profile?.profileImageUrl}
+                            currentImageUrl={tempProfileImageUrl || profile?.profileImageUrl}
                             onImageChange={setProfileImage}
+                            hasUnsavedChanges={!!profileImage} // Pass this prop to control remove button
                         />
                     </div>
                     

@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from '@/redux/store'
-import { ProtectedRoute, HomePage, TravellerSettings } from '@/routes'
+import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings } from '@/routes'
 
 
 const queryClient = new QueryClient()
@@ -23,19 +23,28 @@ function App() {
             <Route
               path="/home"
               element={
-                <ProtectedRoute>
+                <TravellerProtectedRoute>
                   <HomePage />
-                </ProtectedRoute>
+                </TravellerProtectedRoute>
               }
             />
             <Route
               path="/traveller/settings"
               element={
-                <ProtectedRoute>
+                <TravellerProtectedRoute>
                   <TravellerSettings />
-                </ProtectedRoute>
+                </TravellerProtectedRoute>
               }
             />
+            <Route
+              path='/admin/settings' 
+              element={
+                <AdminProtectedRoute>
+                  <AdminSettings/>
+                </AdminProtectedRoute>
+              }
+            />
+
           </Routes>
         </BrowserRouter>
         <Toaster 

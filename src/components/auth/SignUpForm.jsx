@@ -24,23 +24,8 @@ export default function SignUpForm({ onSwitchToLogin }) {
     } = useForm();
 
     const onSubmit = (data) => {
-        let fullName = '';
-        if (data.firstName && data.lastName) {
-            fullName = `${data.firstName} ${data.lastName}`;
-        } else if (data.firstName) {
-            fullName = data.firstName;
-        } else if (data.lastName) {
-            fullName = data.lastName;
-        }
-        const apiData = {
-            ...data,
-            fullName,
-        };
-        delete apiData.firstName;
-        delete apiData.lastName;
-        delete apiData.confirmPassword;
-        
-        initiateSignUp(apiData, {
+        delete data.confirmPassword
+        initiateSignUp(data, {
             onSuccess: (data)=>{
                 reset()
                 setShowOTPModal(true)

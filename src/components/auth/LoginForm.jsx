@@ -16,7 +16,6 @@ export default function LoginForm() {
 
     const onSubmit = async (data) => {
         const response = await login(data);
-        console.log('I am here inside the loginform component, after the mutateasync.')
         const authData = response?.data?.user ?? response?.data?.data?.user ?? response?.user ?? response?.data ?? response;
         const payload = {
             id: authData.id,
@@ -27,8 +26,11 @@ export default function LoginForm() {
             isActive: authData.isActive,
         };
         dispatch(setUser(payload));
-        console.log('I am after the dispatch call');
-        navigate('/home');
+        if(!authData.isAdmin){
+            navigate('/home');
+        }else{
+            navigate('/admin/settings')
+        }
     };
 
     return (

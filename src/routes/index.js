@@ -1,3 +1,5 @@
-export { default as ProtectedRoute } from './protected/ProtectedRoute'
+export { default as TravellerProtectedRoute } from './protected/TravellerProtectedRoute'
 export { default as TravellerSettings } from '@/pages/TravellerSettings'
 export { default as HomePage } from '@/pages/HomePage'
+export {default as AdminProtectedRoute} from './protected/AdminProtectedRoute'
+export {default as AdminSettings} from '@/pages/AdminSettings'

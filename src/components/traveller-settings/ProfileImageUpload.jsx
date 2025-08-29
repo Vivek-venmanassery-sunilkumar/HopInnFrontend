@@ -3,7 +3,7 @@ import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
 
 // Simple SVG icons
@@ -40,7 +40,8 @@ function centerAspectCrop(mediaWidth, mediaHeight, aspect) {
 export default function ProfileImageUpload({ 
     currentImageUrl, 
     onImageChange, 
-    fallbackImage = '/src/assets/profile_avatar.png' 
+    fallbackImage = '/src/assets/profile_avatar.png',
+    hasUnsavedChanges = false
 }) {
     const [previewUrl, setPreviewUrl] = useState(null)
     const [isOpen, setIsOpen] = useState(false)
@@ -50,6 +51,7 @@ export default function ProfileImageUpload({
     const imgRef = useRef(null)
     const [completedCrop, setCompletedCrop] = useState()
     const [isCropping, setIsCropping] = useState(false)
+    const descriptionId = 'crop-description'
 
     // Cleanup preview URL when component unmounts or image changes
     useEffect(() => {
@@ -87,7 +89,9 @@ export default function ProfileImageUpload({
 
     function onImageLoad(e) {
         const { width, height } = e.currentTarget
-        setCrop(centerAspectCrop(width, height, 1))
+        const newCrop = centerAspectCrop(width, height, 1)
+        setCrop(newCrop)
+        setCompletedCrop(newCrop) // Set completedCrop initially
     }
 
     const getCroppedImg = (image, crop) => {
@@ -102,31 +106,29 @@ export default function ProfileImageUpload({
         const scaleY = image.naturalHeight / image.height
         const pixelRatio = window.devicePixelRatio
 
+        // Set canvas dimensions based on crop
         canvas.width = Math.floor(crop.width * scaleX * pixelRatio)
         canvas.height = Math.floor(crop.height * scaleY * pixelRatio)
 
         ctx.scale(pixelRatio, pixelRatio)
         ctx.imageSmoothingQuality = 'high'
 
+        // Calculate crop coordinates
         const cropX = crop.x * scaleX
         const cropY = crop.y * scaleY
 
-        ctx.save()
-        // Move the crop origin to the canvas origin (0,0)
-        ctx.translate(-cropX, -cropY)
-        // Draw the image
+        // Draw the cropped image
         ctx.drawImage(
             image,
+            cropX,
+            cropY,
+            crop.width * scaleX,
+            crop.height * scaleY,
             0,
             0,
-            image.naturalWidth,
-            image.naturalHeight,
-            0,
-            0,
-            image.naturalWidth,
-            image.naturalHeight,
+            crop.width * scaleX,
+            crop.height * scaleY
         )
-        ctx.restore()
 
         return new Promise((resolve) => {
             canvas.toBlob(
@@ -144,8 +146,16 @@ export default function ProfileImageUpload({
     }
 
     const handleCropComplete = async () => {
-        if (!imgRef.current || !completedCrop) {
+        if (!imgRef.current) {
             return
+        }
+
+        // Use the current crop if completedCrop is not set
+        const finalCrop = completedCrop || crop;
+        
+        if (!finalCrop) {
+            toast.error('Please select a crop area');
+            return;
         }
 
         setIsCropping(true)
@@ -153,7 +163,7 @@ export default function ProfileImageUpload({
         try {
             const croppedBlob = await getCroppedImg(
                 imgRef.current,
-                completedCrop
+                finalCrop
             )
             
             if (!croppedBlob) {
@@ -173,7 +183,7 @@ export default function ProfileImageUpload({
             setImageSrc('')
         } catch (error) {
             console.error('Error cropping image:', error)
-            alert('Error processing image. Please try again.')
+            toast.error('Error processing image. Please try again.')
         } finally {
             setIsCropping(false)
         }
@@ -185,6 +195,13 @@ export default function ProfileImageUpload({
         if (fileInputRef.current) {
             fileInputRef.current.value = ''
         }
+    }
+
+    const handleDialogClose = () => {
+        setIsOpen(false)
+        setImageSrc('')
+        setCrop(undefined)
+        setCompletedCrop(undefined)
     }
 
     return (
@@ -214,7 +231,7 @@ export default function ProfileImageUpload({
             </div>
 
             <div className="flex gap-2">
-                {(currentImageUrl || previewUrl) && (
+                {hasUnsavedChanges && (
                     <Button
                         type="button"
                         variant="outline"
@@ -236,20 +253,28 @@ export default function ProfileImageUpload({
                 className="hidden"
             />
 
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="max-w-md">
+            <Dialog open={isOpen} onOpenChange={handleDialogClose}>
+                <DialogContent 
+                    className="max-w-md" 
+                    aria-describedby={descriptionId}
+                >
                     <DialogHeader>
                         <DialogTitle>Crop Profile Image</DialogTitle>
                     </DialogHeader>
                     
                     <div className="space-y-4">
+                        <DialogDescription id={descriptionId} className="sr-only">
+                            Adjust the circular selection to crop your profile image
+                        </DialogDescription>
+                        
                         {imageSrc && (
                             <ReactCrop
                                 crop={crop}
-                                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                                onChange={(newCrop) => setCrop(newCrop)}
                                 onComplete={(c) => setCompletedCrop(c)}
                                 aspect={1}
                                 circularCrop
+                                keepSelection={true}
                             >
                                 <img
                                     ref={imgRef}
@@ -266,7 +291,7 @@ export default function ProfileImageUpload({
                                 type="button"
                                 variant="outline"
                                 className="bg-[#FFEEC2] hover:bg-[#F68241] text-black border-[#F68241]"
-                                onClick={() => setIsOpen(false)}
+                                onClick={handleDialogClose}
                                 disabled={isCropping}
                             >
                                 Cancel
@@ -275,7 +300,7 @@ export default function ProfileImageUpload({
                                 type="button"
                                 className="bg-[#F3CA62] hover:bg-[#F68241] text-black"
                                 onClick={handleCropComplete}
-                                disabled={isCropping || !completedCrop}
+                                disabled={isCropping}
                             >
                                 {isCropping ? "Processing..." : "Apply Crop"}
                             </Button>
