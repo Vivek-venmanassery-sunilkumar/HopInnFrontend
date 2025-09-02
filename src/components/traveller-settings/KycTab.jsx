@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useAddKycDocuments, useGetKycDetails } from '@/hooks/kyc/KycHooks';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,132 @@ import {
   ImageIcon 
 } from 'lucide-react';
 
+// Status-related components and utilities
+const StatusIcon = ({ status }) => {
+  switch (status?.toLowerCase()) {
+    case 'approved':
+      return <CheckCircle className="w-5 h-5 text-green-500" />;
+    case 'rejected':
+      return <XCircle className="w-5 h-5 text-red-500" />;
+    case 'pending':
+      return <Clock className="w-5 h-5 text-amber-500" />;
+    default:
+      return <AlertCircle className="w-5 h-5 text-gray-500" />;
+  }
+};
+
+const StatusText = ({ status }) => {
+  const statusColor = useMemo(() => {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+        return 'text-green-600';
+      case 'rejected':
+        return 'text-red-600';
+      case 'pending':
+        return 'text-amber-600';
+      default:
+        return 'text-gray-600';
+    }
+  }, [status]);
+
+  return (
+    <span className={`font-semibold ${statusColor}`}>
+      {status || 'Not Submitted'}
+    </span>
+  );
+};
+
+// Upload Requirements Component
+const UploadRequirements = () => (
+  <div className="bg-gray-100 p-4 rounded-lg">
+    <h4 className="font-medium text-sm mb-2">Requirements:</h4>
+    <ul className="text-sm text-gray-600 space-y-1">
+      <li className="flex items-center">
+        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+        Document must be clearly visible
+      </li>
+      <li className="flex items-center">
+        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+        All four corners should be within the image
+      </li>
+      <li className="flex items-center">
+        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+        No glare or reflections on the document
+      </li>
+      <li className="flex items-center">
+        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+        File size must be less than 5MB
+      </li>
+    </ul>
+  </div>
+);
+
+// Status Alert Components
+const PendingStatusAlert = () => (
+  <Alert className="bg-amber-50 border-amber-200">
+    <Clock className="w-4 h-4 text-amber-600 mr-2" />
+    <AlertDescription className="text-amber-800">
+      Your KYC document is under review. This process typically takes 1-2 business days.
+    </AlertDescription>
+  </Alert>
+);
+
+const RejectedStatusAlert = () => (
+  <Alert variant="destructive" className="bg-red-50 border-red-200">
+    <XCircle className="w-4 h-4 text-red-600 mr-2" />
+    <AlertDescription className="text-red-800">
+      Your KYC document was rejected. Please upload a new document.
+    </AlertDescription>
+  </Alert>
+);
+
+// Upload Section Component
+const UploadSection = ({ inputRef, handleFileChange, error }) => (
+  <Card>
+    <CardContent className="p-6">
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Upload KYC Document</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Upload a clear image of your government-issued ID (Driver's License, Passport, or National ID)
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div 
+            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition-colors bg-gray-50"
+            onClick={() => inputRef.current?.click()}
+          >
+            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Upload className="w-6 h-6 text-blue-600" />
+            </div>
+            <p className="font-medium text-gray-700">Click to upload or drag and drop</p>
+            <p className="text-sm text-gray-500 mt-1">JPG, PNG (Max 5MB)</p>
+            <Input
+              id="kyc-upload"
+              type="file"
+              accept="image/*"
+              ref={inputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+
+          {error && (
+            <Alert variant="destructive" className="bg-red-50 border-red-200">
+              <AlertCircle className="w-4 h-4 mr-2" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <UploadRequirements />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Main Component
 export default function KycTab() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -60,14 +186,13 @@ export default function KycTab() {
     if (!selectedFile) return;
     
     try {
-    
       const result = await uploadToCloudinary(selectedFile);
-      const payload={
+      const payload = {
         kycImageUrl: result.imageUrl,
         kycImagePublicId: result.publicId,
-      }
+      };
       mutation.mutate(payload);
-      console.log('Payload being sent for kyc add: ', payload)
+      console.log('Payload being sent for kyc add: ', payload);
       
       // Clean up preview URL
       URL.revokeObjectURL(previewUrl);
@@ -97,32 +222,12 @@ export default function KycTab() {
     }
   };
 
-
-  const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'approved':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'pending':
-        return <Clock className="w-5 h-5 text-amber-500" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'approved':
-        return 'text-green-600';
-      case 'rejected':
-        return 'text-red-600';
-      case 'pending':
-        return 'text-amber-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
+  // Determine if we should show the upload section
+  const shouldShowUploadSection = useMemo(() => {
+    if (isLoading) return false;
+    // Show upload section if no KYC details or if status is rejected
+    return !kycDetails || kycDetails.verificationStatus?.toLowerCase() === 'rejected';
+  }, [kycDetails, isLoading]);
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-8">
@@ -139,30 +244,34 @@ export default function KycTab() {
           <p>Loading your KYC information...</p>
         </div>
       ) : kycDetails ? (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <FileCheck className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-2">KYC Document Submitted</h3>
-                <div className="flex items-center gap-2 mb-3">
-                  <span>Status:</span>
-                  {getStatusIcon(kycDetails.verificationStatus)}
-                  <span className={`font-semibold ${getStatusColor(kycDetails.verificationStatus)}`}>
-                    {kycDetails.verificationStatus || 'Not Submitted'}
-                  </span>
+        <>
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <FileCheck className="w-6 h-6 text-blue-600" />
                 </div>
-                <img 
-                  src={kycDetails.kycImageUrl} 
-                  alt="KYC Document" 
-                  className="max-w-xs rounded-lg border shadow-sm mt-3"
-                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-2">KYC Document Submitted</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span>Status:</span>
+                    <StatusIcon status={kycDetails.verificationStatus} />
+                    <StatusText status={kycDetails.verificationStatus} />
+                  </div>
+                  <img 
+                    src={kycDetails.kycImageUrl} 
+                    alt="KYC Document" 
+                    className="max-w-xs rounded-lg border shadow-sm mt-3"
+                  />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          
+          {/* Show additional information based on status */}
+          {kycDetails.verificationStatus?.toLowerCase() === 'pending' && <PendingStatusAlert />}
+          {kycDetails.verificationStatus?.toLowerCase() === 'rejected' && <RejectedStatusAlert />}
+        </>
       ) : (
         <Card className="bg-amber-50 border-amber-200">
           <CardContent className="p-6">
@@ -181,68 +290,14 @@ export default function KycTab() {
         </Card>
       )}
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Upload KYC Document</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Upload a clear image of your government-issued ID (Driver's License, Passport, or National ID)
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div 
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition-colors bg-gray-50"
-                onClick={() => inputRef.current?.click()}
-              >
-                <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <Upload className="w-6 h-6 text-blue-600" />
-                </div>
-                <p className="font-medium text-gray-700">Click to upload or drag and drop</p>
-                <p className="text-sm text-gray-500 mt-1">JPG, PNG (Max 5MB)</p>
-                <Input
-                  id="kyc-upload"
-                  type="file"
-                  accept="image/*"
-                  ref={inputRef}
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </div>
-
-              {error && (
-                <Alert variant="destructive" className="bg-red-50 border-red-200">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <h4 className="font-medium text-sm mb-2">Requirements:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Document must be clearly visible
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    All four corners should be within the image
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    No glare or reflections on the document
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    File size must be less than 5MB
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Show upload section if needed */}
+      {shouldShowUploadSection && (
+        <UploadSection 
+          inputRef={inputRef} 
+          handleFileChange={handleFileChange} 
+          error={error} 
+        />
+      )}
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent className="sm:max-w-md">

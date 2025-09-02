@@ -7,13 +7,6 @@ export const useProfile=(options={})=>{
     return useQuery({
         queryKey: ['profile'],
         queryFn: getProfileDetails,
-        onSuccess:(data)=>{
-            toast.success("Profile loaded successfuly")
-        },
-        onError: (error)=>{
-            const message = error?.message || 'Failed to load profile';
-            toast.error(message)
-        },
         retry: 1,
         staleTime: 5 *60 *1000,
         ...options,
