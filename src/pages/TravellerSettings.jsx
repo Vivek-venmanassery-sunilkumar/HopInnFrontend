@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import ProfileTab from '@/components/traveller-settings/ProfileTab'
 import WalletTab from '@/components/traveller-settings/WalletTab'
+import KycTab from '@/components/traveller-settings/KycTab'
 import { Tabs,TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs'
 
 export default function TravellerSettings(){
@@ -11,7 +12,7 @@ export default function TravellerSettings(){
 
     useEffect(()=>{
         const tab = searchParams.get('tab')
-        if(tab && ['profile', 'wallet'].includes(tab)){
+        if(tab && ['profile', 'wallet', 'kyc'].includes(tab)){
             setActiveTab(tab)
         }
     },[searchParams])
@@ -41,6 +42,12 @@ export default function TravellerSettings(){
                                 >
                                     Wallet
                                 </TabsTrigger>
+                                <TabsTrigger 
+                                    value="kyc"
+                                    className="data-[state=active]:bg-[#F3CA62] justify-start px-3 py-2 rounded-md hover:bg-[#FFEEC2]"
+                                >
+                                    KYC
+                                </TabsTrigger>
                             </TabsList>
                         </aside>
                         
@@ -50,6 +57,9 @@ export default function TravellerSettings(){
                             </TabsContent>
                             <TabsContent value="wallet" className="m-0">
                                 <WalletTab />
+                            </TabsContent>
+                            <TabsContent value="kyc" className="m-0">
+                                <KycTab />
                             </TabsContent>
                         </section>
                     </div>
