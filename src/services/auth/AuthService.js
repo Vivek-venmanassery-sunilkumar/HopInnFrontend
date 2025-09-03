@@ -50,3 +50,14 @@ export const login  = async (data)=>{
         throw new Error(serverMessage || error.message)
     }
 }
+
+export const googleLogin = async (data)=>{
+    try{
+        const response = await authApi.post('auth/google', data)
+        if(response.status == 200){
+        return response.data
+        }
+    }catch(error){
+        const serverMessage = error.response?.data?.detail?.message;
+    }
+}

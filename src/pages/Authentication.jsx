@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import HikerLogo from '@/assets/hiker-logo.svg';
 import SignUpForm from '@/components/auth/SignUpForm';
 import LoginForm from '@/components/auth/LoginForm';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 // Simple SVG icons
 const PlaneIcon = ({ className, size = 24 }) => (
     <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -98,7 +100,7 @@ export default function Authentication() {
                             )}
                         </div>
 
-                        {showLogin ? <LoginForm /> : <SignUpForm onSwitchToLogin={() => setShowLogin(true)} />}
+                        {showLogin ? <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}><LoginForm /> </GoogleOAuthProvider>: <SignUpForm onSwitchToLogin={() => setShowLogin(true)} />}
                         <div className="text-center mt-6">
                             {showLogin ? (
                                 <p className="text-gray-500 text-sm">

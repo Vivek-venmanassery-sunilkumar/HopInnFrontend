@@ -1,4 +1,4 @@
-import { initiateSignUp, verifyOTP, retryOTP, login } from "@/services/auth/AuthService";
+import { initiateSignUp, verifyOTP, retryOTP, login, googleLogin } from "@/services/auth/AuthService";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -60,5 +60,11 @@ export function useLogin(){
             console.log('I am inside the onError inside the useLogin mutation.')
             toast.error(message)
         }
+    })
+}
+
+export function useGoogleLogin(){
+    return useMutation({
+        mutationFn: googleLogin,
     })
 }
