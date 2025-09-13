@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { useAddKycDocuments, useGetKycDetails } from '@/hooks/kyc/KycHooks';
+import { useAddKycDocuments, useGetKycDetails } from '@/hooks/KycHooks';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';

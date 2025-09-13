@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetKycDetailsAdmin, useApproveKyc, useRejectKyc } from "@/hooks/kyc/KycHooks";
+import { useGetKycDetailsAdmin, useApproveKyc, useRejectKyc } from "@/hooks/KycHooks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "../ui/button";

@@ -1,4 +1,4 @@
-import { addKycDocuments, approveKyc, getKycDetails, getKycDetailsAdmin, rejectKyc } from "@/services/kyc/KycService";
+import { addKycDocuments, approveKyc, getKycDetails, getKycDetailsAdmin, rejectKyc } from "@/services/KycService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 

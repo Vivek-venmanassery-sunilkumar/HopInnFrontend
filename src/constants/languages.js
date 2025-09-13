@@ -1,0 +1,30 @@
+export const LANGUAGES = [
+  'English', 'Spanish', 'French', 'German', 'Chinese', 'Hindi', 'Arabic', 
+  'Portuguese', 'Russian', 'Japanese', 'Bengali', 'Punjabi', 'Telugu', 
+  'Marathi', 'Tamil', 'Urdu', 'Gujarati', 'Kannada', 'Malayalam', 'Odia',
+  'Sanskrit', 'Assamese', 'Maithili', 'Santali', 'Kashmiri', 'Nepali',
+  'Sindhi', 'Konkani', 'Dogri', 'Manipuri', 'Bodo', 'Italian', 'Dutch',
+  'Korean', 'Turkish', 'Vietnamese', 'Polish', 'Ukrainian', 'Romanian',
+  'Persian', 'Hebrew', 'Thai', 'Greek', 'Swedish', 'Norwegian', 'Danish',
+  'Finnish', 'Czech', 'Hungarian', 'Bulgarian', 'Croatian', 'Serbian',
+  'Slovak', 'Slovenian', 'Lithuanian', 'Latvian', 'Estonian', 'Maltese',
+  'Icelandic', 'Irish', 'Welsh', 'Scottish Gaelic', 'Basque', 'Catalan',
+  'Galician', 'Breton', 'Luxembourgish', 'Albanian', 'Macedonian', 'Bosnian',
+  'Montenegrin', 'Belarusian', 'Armenian', 'Georgian', 'Azerbaijani',
+  'Kazakh', 'Uzbek', 'Turkmen', 'Kyrgyz', 'Tajik', 'Mongolian', 'Tibetan',
+  'Uyghur', 'Burmese', 'Khmer', 'Lao', 'Sinhala', 'Dhivehi',
+  'Pashto', 'Dari', 'Kurdish', 'Balochi', 'Haryanvi', 'Rajasthani', 'Bhojpuri', 
+  'Awadhi', 'Chhattisgarhi', 'Magahi', 'Santhali', 'Gondi', 'Tulu', 'Kodava', 
+  'Sora', 'Munda', 'Ho', 'Khasi', 'Garo', 'Mizo', 'Manipuri',
+  'Bishnupriya', 'Tripuri', 'Kokborok', 'Jaintia', 'Lushai', 'Lepcha', 
+  'Bhutia', 'Limboo', 'Tamang', 'Newari', 'Rai', 'Gurung', 'Magar', 'Sherpa', 
+  'Tharu', 'Braj', 'Bundeli', 'Bagheli', 'Malvi', 'Nimadi', 'Bagri', 'Mewati', 
+  'Ahirani', 'Khandeshi', 'Dangi', 'Varhadi', 'Nagpuri', 'Surgujia', 'Kurukh', 
+  'Saurashtra', 'Kutchi', 'Memoni', 'Dhakaiya', 'Sylheti', 'Chittagonian', 
+  'Rohingya', 'Jingpho', 'Shan', 'Mon', 'Karen', 'Chin languages', 'Kachin', 
+  'Kayah', 'Rakhine', 'Wa', 'Palaung', 'Pa-O', 'Lahu', 'Akha', 'Hmong', 'Mien', 
+  'Lisu', 'Jingpo', 'Naxi', 'Bai', 'Yi', 'Tujia', 'Dong', 'Miao', 'Bouyei', 
+  'Dai', 'Sui', 'Gelao', 'Maonan', 'Mulam', 'Qiang'
+].filter((lang, index, self) => self.indexOf(lang) === index) // Remove duplicates
+.sort((a, b) => a.localeCompare(b))
+.map(lang => ({ label: lang, value: lang }));

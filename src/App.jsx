@@ -6,7 +6,8 @@ import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from '@/redux/store'
-import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings } from '@/routes'
+import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings, RegistrationForm } from '@/routes'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 
 const queryClient = new QueryClient()
@@ -42,6 +43,14 @@ function App() {
                 <AdminProtectedRoute>
                   <AdminSettings/>
                 </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path='/registration'
+              element={
+                <TravellerProtectedRoute>
+                  <RegistrationForm/>
+                </TravellerProtectedRoute>
               }
             />
 

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProfileDetails, updateProfileDetails } from "@/services/traveller-profile/TravellerProfileService";
+import { getProfileDetails, updateProfileDetails } from "@/services/TravellerProfileService";
 import {toast} from 'react-hot-toast'
 
 
