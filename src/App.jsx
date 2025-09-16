@@ -6,7 +6,8 @@ import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from '@/redux/store'
-import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings, RegistrationForm } from '@/routes'
+import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings, 
+  RegistrationForm, GuideSettings} from '@/routes'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 
@@ -53,7 +54,12 @@ function App() {
                 </TravellerProtectedRoute>
               }
             />
-
+            <Route
+              path='/guide-settings'
+              element={
+                <GuideSettings/>
+              }
+            />
           </Routes>
         </BrowserRouter>
         <Toaster 

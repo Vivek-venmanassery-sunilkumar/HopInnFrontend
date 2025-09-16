@@ -7,8 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { LANGUAGES } from '@/constants/languages';
 import AddressForm from '../common/AddressForm';
 import { useGuideOnboard } from '@/hooks/GuideHooks';
+import { useDispatch } from 'react-redux';
+import { fetchUserRoles } from '@/redux/slices/authSlice';
 
 export default function GuideRegistrationForm() {
+  const dispatch = useDispatch();
   const { register, handleSubmit, setValue, control, watch, formState: { errors } } = useForm();
   const { mutateAsync: onboardGuide, isPending: isLoading } = useGuideOnboard();
 
@@ -18,8 +21,25 @@ export default function GuideRegistrationForm() {
       data.knownLanguages = data.knownLanguages.map(l => l.value);
     }
     
+    if(data.country && typeof data.country === 'object'){
+      data.country = data.country.value;
+    }
+
+    if(data.district && typeof data.district === 'object'){
+      data.district = data.district.value;
+    }
+
+    if(data.state && typeof data.state == 'object'){
+      data.state = data.state.label;
+    }
+
     console.log('Guide Registration:', data);
-    const response = await onboardGuide(data);
+    const response = await onboardGuide(data, {
+      onSuccess: ()=>{
+       //Dispatch the thunk to refresh user roles 
+       dispatch(fetchUserRoles())
+      }
+    });
   };
 
   return (

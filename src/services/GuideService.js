@@ -4,7 +4,7 @@ import { authApi } from "@/axios/auth.axios"
 
 export const GuideOnBoard = async (data) =>{
     try{
-        const response =await authApi.post('/guide/onboard', {...data});
+        const response =await authApi.post('/onboard/guide', {...data});
         if(response.status === 200){
             return response.data
         }
