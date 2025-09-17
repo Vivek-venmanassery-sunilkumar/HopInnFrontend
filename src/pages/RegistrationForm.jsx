@@ -1,15 +1,25 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import GuideRegistrationForm from "@/components/traveller-settings/GuideRegistrationForm"
 import HostRegistrationForm from "@/components/traveller-settings/HostRegistrationForm"
 import HikerLogo from "@/assets/hiker-logo.svg"
+import { useSelector } from "react-redux"
+import toast from "react-hot-toast"
 
 export default function RegistrationForm({ defaultType = "guide" }) {
+  const user = useSelector((state)=>state.auth.user)
   const [type, setType] = useState(defaultType)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const toastShownRef = useRef(false)
 
   useEffect(() => {
+    if(user && !user.kycVerified && !toastShownRef.current){
+      toastShownRef.current = true
+      navigate('/traveller/settings?tab=kyc')
+      toast.error("Please complete your KYC to proceed")
+      return
+    }
     const urlType = searchParams.get("type")
     if (urlType && (urlType === "guide" || urlType === "host")) {
       setType(urlType)

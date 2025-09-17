@@ -64,6 +64,15 @@ export default function TravellerSettings() {
                   Become a Host
                 </Button>
               )}
+              {user.isHost && (
+                <Button
+                  onClick={() => navigate("/host-settings")}
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  Host Settings
+                </Button>
+              )}
             </div>
           </div>
         </div>

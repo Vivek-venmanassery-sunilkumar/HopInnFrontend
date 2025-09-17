@@ -1,19 +1,21 @@
-import { useForm, Controller } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import Select from 'react-select';
-import { Textarea } from '@/components/ui/textarea';
-import { LANGUAGES } from '@/constants/languages';
 import AddressForm from '../common/AddressForm';
 import { useGuideOnboard } from '@/hooks/GuideHooks';
 import { useDispatch } from 'react-redux';
 import { fetchUserRoles } from '@/redux/slices/authSlice';
+import GuideFormFields from '../common/GuideFormFields';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 export default function GuideRegistrationForm() {
   const dispatch = useDispatch();
+  const user = useSelector((state)=>state.auth.user)
+  const navigate = useNavigate()
   const { register, handleSubmit, setValue, control, watch, formState: { errors } } = useForm();
   const { mutateAsync: onboardGuide, isPending: isLoading } = useGuideOnboard();
+
 
   const onSubmit = async (data) => {
     // Format knownLanguages as values
@@ -35,9 +37,10 @@ export default function GuideRegistrationForm() {
 
     console.log('Guide Registration:', data);
     const response = await onboardGuide(data, {
-      onSuccess: ()=>{
-       //Dispatch the thunk to refresh user roles 
-       dispatch(fetchUserRoles())
+      onSuccess: async ()=>{
+        // Dispatch the thunk to refresh user roles 
+        await dispatch(fetchUserRoles()).unwrap()
+        navigate('/guide-settings')
       }
     });
   };
@@ -49,123 +52,12 @@ export default function GuideRegistrationForm() {
         <p className="text-gray-600">Complete your profile to become a certified guide</p>
       </div>
 
-      <div>
-        <Label>Known Languages *</Label>
-        <Controller
-          name="knownLanguages"
-          control={control}
-          rules={{ required: 'Please select at least one language' }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              isMulti
-              options={LANGUAGES}
-              classNamePrefix="select"
-              placeholder="Select languages you speak..."
-              className="mt-1"
-            />
-          )}
-        />
-        {errors.knownLanguages && (
-          <span className="text-red-500 text-sm">{errors.knownLanguages.message}</span>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="about">Tell us about yourself *</Label>
-        <Textarea 
-          id="about"
-          {...register('about', { 
-            required: 'This field is required',
-            minLength: {
-              value: 50,
-              message: 'Please write at least 50 characters about yourself'
-            }
-          })} 
-          placeholder="Describe your background, experience, passion for guiding, and what makes you unique..."
-          rows={4}
-          className="mt-1"
-        />
-        {errors.about && <span className="text-red-500 text-sm">{errors.about.message}</span>}
-      </div>
-
-      <div>
-        <Label htmlFor="profession">Profession *</Label>
-        <Input 
-          id="profession"
-          {...register('profession', { required: 'Profession is required' })} 
-          placeholder="e.g., Certified Tour Guide, History Professor, Adventure Specialist"
-          className="mt-1"
-        />
-        {errors.profession && <span className="text-red-500 text-sm">{errors.profession.message}</span>}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label htmlFor="dob">Date of Birth *</Label>
-          <Input 
-            id="dob"
-            type="date" 
-            {...register('dob', { 
-              required: 'Date of birth is required',
-              validate: {
-                validAge: (value) => {
-                  const birthDate = new Date(value);
-                  const today = new Date();
-                  const age = today.getFullYear() - birthDate.getFullYear();
-                  const monthDiff = today.getMonth() - birthDate.getMonth();
-                  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                    return age - 1 >= 18 || 'You must be at least 18 years old';
-                  }
-                  return age >= 18 || 'You must be at least 18 years old';
-                }
-              }
-            })} 
-            className="mt-1"
-          />
-          {errors.dob && <span className="text-red-500 text-sm">{errors.dob.message}</span>}
-        </div>
-
-        <div>
-          <Label htmlFor="hourlyRate">Hourly Rate (₹) *</Label>
-          <Input 
-            id="hourlyRate"
-            type="number" 
-            {...register('hourlyRate', { 
-              required: 'Hourly rate is required',
-              min: { 
-                value: 50, 
-                message: 'Minimum rate is ₹50 per hour' 
-              },
-              max: {
-                value: 5000,
-                message: 'Maximum rate is ₹5000 per hour'
-              }
-            })} 
-            placeholder="e.g., 500"
-            className="mt-1"
-          />
-          {errors.hourlyRate && <span className="text-red-500 text-sm">{errors.hourlyRate.message}</span>}
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="expertise">Areas of Expertise/Specializations *</Label>
-        <Textarea 
-          id="expertise"
-          {...register('expertise', { 
-            required: 'Please describe your areas of expertise',
-            minLength: {
-              value: 30,
-              message: 'Please provide at least 30 characters about your expertise'
-            }
-          })} 
-          placeholder="e.g., Historical tours, Food and culinary experiences, Adventure activities, Cultural immersion, Wildlife safaris, Photography tours..."
-          rows={3}
-          className="mt-1"
-        />
-        {errors.expertise && <span className="text-red-500 text-sm">{errors.expertise.message}</span>}
-      </div>
+      {/* Use the reusable GuideFormFields component */}
+      <GuideFormFields
+        control={control}
+        register={register}
+        errors={errors}
+      />
 
       {/* Use the reusable AddressForm component */}
       <AddressForm 

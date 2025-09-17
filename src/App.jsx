@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from '@/redux/store'
 import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings, 
-  RegistrationForm, GuideSettings} from '@/routes'
+  RegistrationForm, GuideSettings, GuideProtectedRoute, HostProtectedRoute, HostSettings} from '@/routes'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 
@@ -57,8 +57,18 @@ function App() {
             <Route
               path='/guide-settings'
               element={
-                <GuideSettings/>
+                <GuideProtectedRoute>
+                  <GuideSettings/>
+                </GuideProtectedRoute>
               }
+            />
+            <Route
+            path='/host-settings'
+            element={
+              <HostProtectedRoute>
+                <HostSettings/> 
+              </HostProtectedRoute>
+            }
             />
           </Routes>
         </BrowserRouter>

@@ -1,234 +1,125 @@
-import { useForm, Controller } from 'react-hook-form';
-import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import Select from 'react-select';
-import { Textarea } from '@/components/ui/textarea';
+import { useHostOnboard } from '@/hooks/HostHooks';
+import { useDispatch } from 'react-redux';
+import { fetchUserRoles } from '@/redux/slices/authSlice';
+import { uploadToCloudinary } from '@/lib/cloudinaryUtils';
+import HostFormFields from '../common/HostFormFields';
+import PropertyListingForm from '../common/PropertyListingForm';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function HostRegistrationForm() {
-  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm();
-  const [languages, setLanguages] = useState([]);
-  const [countries, setCountries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { register, handleSubmit, setValue, control, watch, formState: { errors } } = useForm();
+  const { mutateAsync: onboardHost, isPending: isLoading } = useHostOnboard();
+  const [uploadingImages, setUploadingImages] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  const onSubmit = async (data) => {
+    try {
+      // Upload images to Cloudinary first
+      if (data.propertyImageFiles && data.propertyImageFiles.length > 0) {
+        setUploadingImages(true);
+        const uploadedImages = [];
         
-        // Fetch countries with specific fields to avoid the error
-        const countriesResponse = await fetch('https://restcountries.com/v3.1/all?fields=name,languages');
-        const countriesData = await countriesResponse.json();
-        
-        // Extract languages from all countries
-        const allLanguages = new Set();
-        countriesData.forEach(country => {
-          if (country.languages) {
-            Object.values(country.languages).forEach(lang => {
-              allLanguages.add(lang);
+        for (const imageFile of data.propertyImageFiles) {
+          try {
+            const result = await uploadToCloudinary(imageFile.file);
+            uploadedImages.push({
+              imageUrl: result.imageUrl,
+              publicId: result.publicId,
+              isPrimary: imageFile.isPrimary || false
             });
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            // Continue with other images even if one fails
           }
-        });
+        }
         
-        // Convert to options format
-        const languageOptions = Array.from(allLanguages).map(lang => ({
-          label: lang,
-          value: lang
-        })).sort((a, b) => a.label.localeCompare(b.label));
-        
-        // Convert countries to options format
-        const countryOptions = countriesData.map(country => ({
-          label: country.name.common,
-          value: country.name.common
-        })).sort((a, b) => a.label.localeCompare(b.label));
-        
-        setLanguages(languageOptions);
-        setCountries(countryOptions);
-        
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        // Fallback data in case API fails
-        setLanguages([
-          { label: 'English', value: 'English' },
-          { label: 'Spanish', value: 'Spanish' },
-          { label: 'French', value: 'French' },
-          { label: 'German', value: 'German' },
-          { label: 'Chinese', value: 'Chinese' }
-        ]);
-        
-        setCountries([
-          { label: 'United States', value: 'United States' },
-          { label: 'United Kingdom', value: 'United Kingdom' },
-          { label: 'Canada', value: 'Canada' },
-          { label: 'Australia', value: 'Australia' },
-          { label: 'India', value: 'India' }
-        ]);
-      } finally {
-        setLoading(false);
+        data.propertyImages = uploadedImages;
+        delete data.propertyImageFiles; // Remove the temporary file references
       }
-    };
+      
+      // Format knownLanguages as values
+      if (data.knownLanguages) {
+        data.knownLanguages = data.knownLanguages.map(l => l.value);
+      }
+      
+      // Format address fields if they're objects
+      if (data.propertyAddress) {
+        if (data.propertyAddress.country && typeof data.propertyAddress.country === 'object') {
+          data.propertyAddress.country = data.propertyAddress.country.value;
+        }
 
-    fetchData();
-  }, []);
+        if (data.propertyAddress.district && typeof data.propertyAddress.district === 'object') {
+          data.propertyAddress.district = data.propertyAddress.district.value;
+        }
 
-  const onSubmit = (data) => {
-    // Format knownLanguages and country as values
-    if (data.knownLanguages) {
-      data.knownLanguages = data.knownLanguages.map(l => l.value);
+        if (data.propertyAddress.state && typeof data.propertyAddress.state === 'object') {
+          data.propertyAddress.state = data.propertyAddress.state.label;
+        }
+      }
+
+      console.log('Host Registration:', data);
+      const response = await onboardHost(data, {
+        onSuccess: async () => {
+          await dispatch(fetchUserRoles()).unwrap();
+          navigate('/host-settings');
+        }
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+    } finally {
+      setUploadingImages(false);
     }
-    if (data.country) {
-      data.country = data.country.value;
-    }
-    
-    console.log('Host Registration:', data);
-    // API call here
   };
 
-  if (loading) {
-    return <div className="text-center py-4">Loading form data...</div>;
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Label>Known Languages *</Label>
-        <Controller
-          name="knownLanguages"
-          control={control}
-          rules={{ required: 'Please select at least one language' }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              isMulti
-              options={languages}
-              classNamePrefix="select"
-              placeholder="Select languages you know..."
-              isLoading={loading}
-            />
-          )}
-        />
-        {errors.knownLanguages && (
-          <span className="text-red-500 text-sm">{errors.knownLanguages.message}</span>
-        )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
+      <div className="border-b pb-4">
+        <h2 className="text-2xl font-bold text-gray-800">Host Registration</h2>
+        <p className="text-gray-600">Complete your profile to become a host</p>
       </div>
 
-      <div>
-        <Label>Tell a bit more about you *</Label>
-        <Textarea 
-          {...register('about', { required: 'This field is required' })} 
-          placeholder="Describe yourself, your interests, etc."
-          rows={4}
-        />
-        {errors.about && <span className="text-red-500 text-sm">{errors.about.message}</span>}
+      {/* Host Personal Information */}
+      <HostFormFields
+        control={control}
+        register={register}
+        errors={errors}
+      />
+
+      {/* Property Information */}
+      <PropertyListingForm
+        control={control}
+        register={register}
+        errors={errors}
+        setValue={setValue}
+        watch={watch}
+        isLoading={isLoading}
+      />
+
+      <div className="bg-green-50 p-4 rounded-lg">
+        <h4 className="font-semibold text-green-800 mb-2">Host Agreement</h4>
+        <p className="text-green-700 text-sm">
+          By submitting this form, you agree to our terms and confirm that you have the necessary 
+          permissions to host guests in your property.
+        </p>
       </div>
 
-      <div>
-        <Label>What work do you do *</Label>
-        <Input 
-          {...register('profession', { required: 'Profession is required' })} 
-          placeholder="e.g., Software Engineer, Teacher, Doctor"
-        />
-        {errors.profession && <span className="text-red-500 text-sm">{errors.profession.message}</span>}
-      </div>
-
-      <div>
-        <Label>Date of Birth *</Label>
-        <Input 
-          type="date" 
-          {...register('dob', { 
-            required: 'Date of birth is required',
-            validate: {
-              validAge: (value) => {
-                const birthDate = new Date(value);
-                const today = new Date();
-                const age = today.getFullYear() - birthDate.getFullYear();
-                return age >= 18 || 'You must be at least 18 years old';
-              }
-            }
-          })} 
-        />
-        {errors.dob && <span className="text-red-500 text-sm">{errors.dob.message}</span>}
-      </div>
-
-      <div className="border p-4 rounded-lg space-y-4">
-        <h3 className="font-semibold">Enter your address</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Country *</Label>
-            <Controller
-              name="country"
-              control={control}
-              rules={{ required: 'Country is required' }}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  options={countries}
-                  classNamePrefix="select"
-                  placeholder="Select your country..."
-                  isLoading={loading}
-                />
-              )}
-            />
-            {errors.country && <span className="text-red-500 text-sm">{errors.country.message}</span>}
-          </div>
-
-          <div>
-            <Label>House Name/Building *</Label>
-            <Input 
-              {...register('houseName', { required: 'House name is required' })} 
-              placeholder="House name or building number"
-            />
-            {errors.houseName && <span className="text-red-500 text-sm">{errors.houseName.message}</span>}
-          </div>
-
-          <div>
-            <Label>Nearby Landmark (optional)</Label>
-            <Input 
-              {...register('landmark')} 
-              placeholder="e.g., Near Central Park, Opposite Mall"
-            />
-          </div>
-
-          <div>
-            <Label>District *</Label>
-            <Input 
-              {...register('district', { required: 'District is required' })} 
-              placeholder="District name"
-            />
-            {errors.district && <span className="text-red-500 text-sm">{errors.district.message}</span>}
-          </div>
-
-          <div>
-            <Label>State/Province *</Label>
-            <Input 
-              {...register('state', { required: 'State is required' })} 
-              placeholder="State or province name"
-            />
-            {errors.state && <span className="text-red-500 text-sm">{errors.state.message}</span>}
-          </div>
-
-          <div>
-            <Label>Postal Code *</Label>
-            <Input 
-              {...register('pincode', { 
-                required: 'Postal code is required',
-                pattern: {
-                  value: /^[0-9]+$/,
-                  message: 'Postal code must contain only numbers'
-                }
-              })} 
-              placeholder="e.g., 123456"
-            />
-            {errors.pincode && <span className="text-red-500 text-sm">{errors.pincode.message}</span>}
-          </div>
-        </div>
-      </div>
-
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Submitting...' : 'Submit Registration'}
+      <Button 
+        type="submit" 
+        className="w-full bg-green-600 hover:bg-green-700" 
+        size="lg"
+        disabled={isLoading || uploadingImages}
+      >
+        {isLoading || uploadingImages ? 'Submitting...' : 'Submit Host Registration'}
       </Button>
+      {uploadingImages && (
+        <p className='text-sm text-blue-500 text-center'>
+          Uploadign images... Please wait.
+        </p>
+      )}
     </form>
   );
 }

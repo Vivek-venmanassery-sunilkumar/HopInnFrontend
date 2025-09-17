@@ -26,9 +26,12 @@ const initialState = {
         id: null,
         isAdmin: false,
         isGuide: false,
+        isGuideBlocked: null,
         isHost: false,
+        isHostBlocked: null,
         isTraveller: true,
         isActive: false,
+        isKycVerified: null
     },
     isAuthenticated: false,
     blocked: false,
@@ -41,8 +44,8 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         setUser(state, action) {
-            const { id, isAdmin = false, isGuide = false, isHost = false, isTraveller = true, isActive = false } = action.payload || {};
-            state.user = { id, isAdmin, isGuide, isHost, isTraveller, isActive };
+            const { id, isAdmin = false, isGuide = false,isGuideBlocked = null, isHost = false, isHostBlocked = null, isTraveller = true, isActive = false, isKycVerified = null } = action.payload || {};
+            state.user = { id, isAdmin, isGuide, isGuideBlocked, isHost, isHostBlocked, isTraveller, isActive, isKycVerified };
             state.isAuthenticated = Boolean(id);
             state.blocked = !state.user.isActive
             console.log(state.user)
