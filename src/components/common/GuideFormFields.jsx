@@ -12,7 +12,6 @@ export default function GuideFormFields({
   showAbout = true,
   showProfession = true,
   showLanguages = true,
-  showDob = true,
   showHourlyRate = true,
   showExpertise = true,
 }) {
@@ -75,58 +74,27 @@ export default function GuideFormFields({
         </div>
       )}
 
-      {(showDob || showHourlyRate) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {showDob && (
-            <div>
-              <Label htmlFor="dob">Date of Birth *</Label>
-              <Input 
-                id="dob"
-                type="date" 
-                {...register('dob', { 
-                  required: 'Date of birth is required',
-                  validate: {
-                    validAge: (value) => {
-                      const birthDate = new Date(value);
-                      const today = new Date();
-                      const age = today.getFullYear() - birthDate.getFullYear();
-                      const monthDiff = today.getMonth() - birthDate.getMonth();
-                      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                        return age - 1 >= 18 || 'You must be at least 18 years old';
-                      }
-                      return age >= 18 || 'You must be at least 18 years old';
-                    }
-                  }
-                })} 
-                className="mt-1"
-              />
-              {errors.dob && <span className="text-red-500 text-sm">{errors.dob.message}</span>}
-            </div>
-          )}
-
-          {showHourlyRate && (
-            <div>
-              <Label htmlFor="hourlyRate">Hourly Rate (₹) *</Label>
-              <Input 
-                id="hourlyRate"
-                type="number" 
-                {...register('hourlyRate', { 
-                  required: 'Hourly rate is required',
-                  min: { 
-                    value: 50, 
-                    message: 'Minimum rate is ₹50 per hour' 
-                  },
-                  max: {
-                    value: 5000,
-                    message: 'Maximum rate is ₹5000 per hour'
-                  }
-                })} 
-                placeholder="e.g., 500"
-                className="mt-1"
-              />
-              {errors.hourlyRate && <span className="text-red-500 text-sm">{errors.hourlyRate.message}</span>}
-            </div>
-          )}
+      {showHourlyRate && (
+        <div>
+          <Label htmlFor="hourlyRate">Hourly Rate (₹) *</Label>
+          <Input 
+            id="hourlyRate"
+            type="number" 
+            {...register('hourlyRate', { 
+              required: 'Hourly rate is required',
+              min: { 
+                value: 50, 
+                message: 'Minimum rate is ₹50 per hour' 
+              },
+              max: {
+                value: 5000,
+                message: 'Maximum rate is ₹5000 per hour'
+              }
+            })} 
+            placeholder="e.g., 500"
+            className="mt-1"
+          />
+          {errors.hourlyRate && <span className="text-red-500 text-sm">{errors.hourlyRate.message}</span>}
         </div>
       )}
 

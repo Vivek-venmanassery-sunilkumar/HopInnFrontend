@@ -35,7 +35,7 @@ const initialState = {
     },
     isAuthenticated: false,
     blocked: false,
-    isLoading: true,
+    isLoading: false,
     error: null
 };
 

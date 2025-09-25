@@ -23,6 +23,7 @@ export default function ProfileTab() {
             lastName: '',
             email: '',
             phoneNumber: '',
+            dob: '',
         }
     })
 
@@ -33,10 +34,18 @@ export default function ProfileTab() {
                 lastName: profile.lastName || '',
                 email: profile.email || '',
                 phoneNumber: profile.phoneNumber || '',
+                dob: profile.dob ? formatDateForInput(profile.dob) : '',
             })
-            setTempProfileImageUrl(null) // Reset temp URL when profile data is loaded
+            setTempProfileImageUrl(null)
         }
     }, [profile, reset])
+
+    // Helper function to format date for input[type="date"]
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return ''
+        const date = new Date(dateString)
+        return date.toISOString().split('T')[0]
+    }
 
     const onSubmit = async (values) => {
         setUploadError(null)
@@ -51,7 +60,6 @@ export default function ProfileTab() {
                     const uploadResult = await uploadToCloudinary(profileImage)
                     updateData.profileImageUrl = uploadResult.imageUrl
                     updateData.profileImagePublicId = uploadResult.publicId
-                    // Store the temporary URL to show immediately
                     setTempProfileImageUrl(uploadResult.imageUrl)
                 } catch (error) {
                     console.error('Cloudinary upload failed:', error)
@@ -96,7 +104,7 @@ export default function ProfileTab() {
                         <ProfileImageUpload
                             currentImageUrl={tempProfileImageUrl || profile?.profileImageUrl}
                             onImageChange={setProfileImage}
-                            hasUnsavedChanges={!!profileImage} // Pass this prop to control remove button
+                            hasUnsavedChanges={!!profileImage}
                         />
                     </div>
                     
@@ -159,6 +167,29 @@ export default function ProfileTab() {
                                 aria-invalid={!!errors.phoneNumber} 
                             />
                             {errors.phoneNumber && <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="dob">Date of Birth *</Label>
+                            <Input 
+                                id="dob" 
+                                type="date" 
+                                {...register('dob', { 
+                                    required: 'Date of birth is required',
+                                    validate: {
+                                        validDate: (value) => {
+                                            const date = new Date(value);
+                                            return !isNaN(date.getTime()) || 'Invalid date';
+                                        },
+                                        notFuture: (value) => {
+                                            const today = new Date();
+                                            const selectedDate = new Date(value);
+                                            return selectedDate <= today || 'Date cannot be in the future';
+                                        }
+                                    }
+                                })} 
+                                aria-invalid={!!errors.dob} 
+                            />
+                            {errors.dob && <p className="text-sm text-destructive">{errors.dob.message}</p>}
                         </div>
                     </div>
                     <div className="flex justify-end">

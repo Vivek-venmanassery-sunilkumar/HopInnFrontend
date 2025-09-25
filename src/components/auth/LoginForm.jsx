@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useLogin, useGoogleLogin } from '@/hooks/AuthHooks';
 import { useDispatch } from 'react-redux';
-import { setUser } from '@/redux/slices/authSlice';
+import { fetchUserRoles } from '@/redux/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { VALIDATION_PATTERNS } from '@/constants/validation';
 import { GoogleLogin } from '@react-oauth/google';
@@ -21,15 +21,11 @@ export default function LoginForm() {
     const onSubmit = async (data) => {
         const response = await login(data);
         const authData = response.user
-        const payload = {
-            id: authData.id,
-            isAdmin: authData.isAdmin,
-            isGuide: authData.isGuide,
-            isHost: authData.isHost,
-            isTraveller: authData.isTraveller,
-            isActive: authData.isActive,
-        };
-        dispatch(setUser(payload));
+        try{
+        await dispatch(fetchUserRoles()).unwrap()
+        }catch(rolesError){
+            await dispatch(fetchUserRoles()).unwrap()
+        }
         if(!authData.isAdmin){
             navigate('/home');
         }else{
@@ -44,15 +40,11 @@ export default function LoginForm() {
             })
 
             const authData = response.user
-            const payload = {
-                id: authData.id,
-                isAdmin: authData.isAdmin,
-                isGuide: authData.isGuide,
-                isHost: authData.isHost,
-                isTraveller: authData.isTraveller,
-                isActive: authData.isActive,
-            };
-            dispatch(setUser(payload));
+            try{
+            await dispatch(fetchUserRoles()).unwrap()
+            }catch(rolesError){
+                await dispatch(fetchUserRoles()).unwrap()
+            }
             if(!authData.isAdmin){
                 navigate('/home')
             }else{
