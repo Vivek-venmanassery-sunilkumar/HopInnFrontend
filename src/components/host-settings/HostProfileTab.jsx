@@ -1,21 +1,141 @@
-import HostFormFields from '@/components/common/HostFormFields';
+import { useFetchHostProfile } from '@/hooks/HostHooks';
+import { Loader2, Calendar, Briefcase, Languages, Edit2, Save, X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 
-export default function HostProfileTab({ initialData }) {
-  // You can pass initialData to HostFormFields if needed for default values
+export default function HostProfileTab() {
+  const { data: profile, isLoading, error } = useFetchHostProfile();
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setValue('profession', profile.profession || '');
+      setValue('about', profile.about || '');
+    }
+  }, [profile, setValue]);
+
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      // Your update mutation here
+      console.log('Submitting:', data);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Loading profile...</span>
+      </div>
+    );
+  }
+
+  if (error) return <div className="text-red-600 text-center p-4">Error loading profile</div>;
+  if (!profile) return <div className="text-yellow-600 text-center p-4">No profile found</div>;
+
   return (
-    <form className="space-y-6 max-w-4xl mx-auto">
-      <div className="border-b pb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Host Profile</h2>
-        <p className="text-gray-600">Update your host profile information</p>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Host Profile</h2>
+          <p className="text-gray-600">Update your host profile information</p>
+        </div>
+        {!isEditing && (
+          <Button onClick={() => setIsEditing(true)} variant="outline">
+            <Edit2 className="h-4 w-4 mr-2" />
+            Edit Profile
+          </Button>
+        )}
       </div>
-      <HostFormFields initialData={initialData} />
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <h4 className="font-semibold text-blue-800 mb-2">Host Certification</h4>
-        <p className="text-blue-700 text-sm">
-          By updating this form, you agree to our terms and confirm that you have the necessary
-          qualifications and permissions to work as a host in your region.
-        </p>
-      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
+            Professional Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isEditing ? (
+            <div>
+              <label className="text-sm font-medium">Profession</label>
+              <Input {...register('profession')} className="mt-1" />
+            </div>
+          ) : (
+            <div>
+              <label className="text-sm font-medium">Profession</label>
+              <p className="mt-1">{profile.profession || 'Not specified'}</p>
+            </div>
+          )}
+          
+          <div>
+            <label className="text-sm font-medium">Member Since</label>
+            <p className="mt-1 flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {profile.joinedOn ? new Date(profile.joinedOn).toLocaleDateString() : 'Not available'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>About Me</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isEditing ? (
+            <Textarea
+              {...register('about')}
+              placeholder="Tell us about yourself..."
+              rows={4}
+            />
+          ) : (
+            <p>{profile.about || 'No information provided yet.'}</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Languages className="h-5 w-5" />
+            Languages
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {profile.knownLanguages?.map((lang, index) => (
+              <span key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                {lang}
+              </span>
+            )) || 'No languages specified'}
+          </div>
+        </CardContent>
+      </Card>
+
+      {isEditing && (
+        <div className="flex gap-3 justify-end">
+          <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Changes
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { Tabs, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 import { ChevronRight, Home } from 'lucide-react';
 import HikerLogo from '@/assets/hiker-logo.svg';
@@ -9,7 +8,6 @@ import ScrollingRoadAnimation from '@/components/animation/ScrollingRoadAnimatio
 
 export default function GuideSettings() {
     const navigate = useNavigate();
-    const user = useSelector(state => state.auth.user);
     const [searchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('profile');
     const [direction, setDirection] = useState(null);

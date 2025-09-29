@@ -28,7 +28,7 @@ export const fetchGuideProfile = async()=>{
 
 export const updateGuideProfile = async(data)=>{
     try{
-        const response = await authApi.put('/gide-profile/update', {...data});
+        const response = await authApi.put('/guide-profile/update', {...data});
         if(response.status === 200){
             return response.data
         }

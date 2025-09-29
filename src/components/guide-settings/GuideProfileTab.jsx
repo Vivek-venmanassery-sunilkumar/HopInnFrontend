@@ -7,24 +7,72 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import AddressDisplay from '../common/AddressDisplay';
 import AddressForm from '../common/AddressForm';
-import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { LANGUAGES } from '@/constants/languages';
 
 export default function GuideProfileTab() {
   const { data: profile, isLoading, error } = useFetchGuideProfile();
   const updateProfileMutation = useUpdateGuideProfile();
   
-  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
-    defaultValues: profile || {}
+  const { control, handleSubmit, setValue, watch, register, formState: { errors } } = useForm({
+    defaultValues: {
+      profession: '',
+      hourlyRate: '',
+      bio: '',
+      knownLanguages: [],
+      expertise: '',
+      address: {
+        houseName: '',
+        landmark: '',
+        pincode: '',
+        district: '',
+        state: '',
+        country: ''
+      }
+    }
   });
   
   const [editingCard, setEditingCard] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Set form values when profile data is loaded
+  useEffect(() => {
+    if (profile) {
+      Object.keys(profile).forEach(key => {
+        if (key === 'knownLanguages' && Array.isArray(profile[key])) {
+          // Convert knownLanguages to the format expected by react-select
+          const languageOptions = profile[key].map(lang => {
+            if (typeof lang === 'string') {
+              return LANGUAGES.find(option => option.value === lang) || { value: lang, label: lang };
+            }
+            return lang;
+          });
+          setValue(key, languageOptions);
+        } else if (key === 'address' && profile[key]) {
+          // Set address fields individually
+          Object.keys(profile[key]).forEach(addressKey => {
+            setValue(`address.${addressKey}`, profile[key][addressKey]);
+          });
+        } else {
+          setValue(key, profile[key]);
+        }
+      });
+    }
+  }, [profile, setValue]);
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      await updateProfileMutation.mutateAsync(data);
+      // Prepare the data in the expected backend format
+      const submitData = {
+        ...data,
+        // Ensure knownLanguages is sent as array of strings
+        knownLanguages: data.knownLanguages ? data.knownLanguages.map(lang => lang.value || lang) : []
+      };
+      
+      await updateProfileMutation.mutateAsync(submitData);
       setEditingCard(null);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -50,7 +98,21 @@ export default function GuideProfileTab() {
     // Reset form values to original profile data
     if (profile) {
       Object.keys(profile).forEach(key => {
-        setValue(key, profile[key]);
+        if (key === 'knownLanguages' && Array.isArray(profile[key])) {
+          const languageOptions = profile[key].map(lang => {
+            if (typeof lang === 'string') {
+              return LANGUAGES.find(option => option.value === lang) || { value: lang, label: lang };
+            }
+            return lang;
+          });
+          setValue(key, languageOptions);
+        } else if (key === 'address' && profile[key]) {
+          Object.keys(profile[key]).forEach(addressKey => {
+            setValue(`address.${addressKey}`, profile[key][addressKey]);
+          });
+        } else {
+          setValue(key, profile[key]);
+        }
       });
     }
   };
@@ -119,22 +181,36 @@ export default function GuideProfileTab() {
             {editingCard === 'professional' ? (
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-medium text-gray-700">Profession</label>
+                  <label className="text-xs font-medium text-gray-700">Profession *</label>
                   <Input
-                    {...control.register('profession')}
-                    defaultValue={profile.profession}
+                    {...register('profession', { required: 'Profession is required' })}
                     className="mt-1 text-sm"
                   />
+                  {errors.profession && (
+                    <span className="text-red-500 text-xs">{errors.profession.message}</span>
+                  )}
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium text-gray-700">Hourly Rate (₹)</label>
+                  <label className="text-xs font-medium text-gray-700">Hourly Rate (₹) *</label>
                   <Input
                     type="number"
-                    {...control.register('hourly_rate')}
-                    defaultValue={profile.hourly_rate}
+                    {...register('hourlyRate', { 
+                      required: 'Hourly rate is required',
+                      min: { 
+                        value: 50, 
+                        message: 'Minimum rate is ₹50 per hour' 
+                      },
+                      max: {
+                        value: 5000,
+                        message: 'Maximum rate is ₹5000 per hour'
+                      }
+                    })}
                     className="mt-1 text-sm"
                   />
+                  {errors.hourlyRate && (
+                    <span className="text-red-500 text-xs">{errors.hourlyRate.message}</span>
+                  )}
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -158,7 +234,7 @@ export default function GuideProfileTab() {
                 <div>
                   <label className="text-xs font-medium text-gray-700">Hourly Rate</label>
                   <p className="text-gray-900 text-sm mt-0.5 flex items-center gap-1">
-                    ₹{profile.hourly_rate || '0'}/hour
+                    ₹{profile.hourlyRate || '0'}/hour
                   </p>
                 </div>
 
@@ -198,11 +274,19 @@ export default function GuideProfileTab() {
             {editingCard === 'bio' ? (
               <div className="space-y-3">
                 <Textarea
-                  {...control.register('bio')}
-                  defaultValue={profile.bio}
+                  {...register('bio', { 
+                    required: 'This field is required',
+                    minLength: {
+                      value: 50,
+                      message: 'Please write at least 50 characters about yourself'
+                    }
+                  })}
                   className="text-sm min-h-[100px]"
                   placeholder="Tell us about yourself..."
                 />
+                {errors.bio && (
+                  <span className="text-red-500 text-xs">{errors.bio.message}</span>
+                )}
                 <div className="flex gap-2">
                   <Button type="button" size="sm" onClick={handleSave} disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -244,12 +328,24 @@ export default function GuideProfileTab() {
           <CardContent>
             {editingCard === 'languages' ? (
               <div className="space-y-3">
-                <Input
-                  {...control.register('knownLanguages')}
-                  defaultValue={Array.isArray(profile.knownLanguages) ? profile.knownLanguages.join(', ') : profile.knownLanguages}
-                  className="text-sm"
-                  placeholder="Enter languages separated by commas"
+                <Controller
+                  name="knownLanguages"
+                  control={control}
+                  rules={{ required: 'Please select at least one language' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      isMulti
+                      options={LANGUAGES}
+                      classNamePrefix="select"
+                      placeholder="Select languages you speak..."
+                      className="text-sm"
+                    />
+                  )}
                 />
+                {errors.knownLanguages && (
+                  <span className="text-red-500 text-xs">{errors.knownLanguages.message}</span>
+                )}
                 <div className="flex gap-2">
                   <Button type="button" size="sm" onClick={handleSave} disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -300,11 +396,20 @@ export default function GuideProfileTab() {
             {editingCard === 'expertise' ? (
               <div className="space-y-3">
                 <Textarea
-                  {...control.register('expertise')}
-                  defaultValue={profile.expertise}
+                  {...register('expertise', { 
+                    required: 'Please describe your areas of expertise',
+                    minLength: {
+                      value: 30,
+                      message: 'Please provide at least 30 characters about your expertise'
+                    }
+                  })}
                   className="text-sm"
-                  placeholder="Enter your areas of expertise separated by commas"
+                  placeholder="e.g., Historical tours, Food and culinary experiences, Adventure activities, Cultural immersion..."
+                  rows={3}
                 />
+                {errors.expertise && (
+                  <span className="text-red-500 text-xs">{errors.expertise.message}</span>
+                )}
                 <div className="flex gap-2">
                   <Button type="button" size="sm" onClick={handleSave} disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

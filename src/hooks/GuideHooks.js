@@ -1,5 +1,5 @@
 import { guideOnBoard, fetchGuideProfile, updateGuideProfile } from "@/services/GuideService";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 
@@ -28,11 +28,13 @@ export function useFetchGuideProfile(){
 }
 
 export function useUpdateGuideProfile(){
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: updateGuideProfile,
         onSuccess: (data)=>{
             const message = data?.message|| "Updated successfully"
             toast.success(message)
+            queryClient.invalidateQueries({qyeryKey:['guideProfile']})
         },
         onError: (error)=>{
             const message = error.message || 'Updation failed'
