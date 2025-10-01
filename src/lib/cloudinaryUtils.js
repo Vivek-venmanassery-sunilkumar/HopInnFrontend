@@ -47,33 +47,13 @@ export const uploadToCloudinary = async (file) => {
 
 export const deleteFromCloudinary = async (publicId) => {
     try {
-        // Get signature data from backend (same as upload)
-        const signatureData = await getCloudinarySignature();
+        // Use backend endpoint for deletion instead of direct Cloudinary API
+        const response = await authApi.delete(`/cloudinary/image/${publicId}`);
         
-        // Create FormData for deletion
-        const formData = new FormData();
-        formData.append('public_id', publicId);
-        formData.append('api_key', signatureData.apiKey);
-        formData.append('timestamp', signatureData.timestamp);
-        formData.append('signature', signatureData.signature);
-
-        // Call Cloudinary destroy API
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${signatureData.cloudName}/image/destroy`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to delete image from Cloudinary');
-        }
-
-        const result = await response.json();
-        
-        // Match your backend logic - check if result is 'ok'
-        if (result.result === 'ok') {
-            return true;
+        if (response.status === 200) {
+            return response.data.success;
         } else {
-            throw new Error(`Cloudinary deletion failed: ${result.result}`);
+            throw new Error('Failed to delete image from Cloudinary');
         }
         
     } catch (error) {

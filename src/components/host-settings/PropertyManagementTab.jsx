@@ -1,13 +1,12 @@
 // components/host-settings/PropertyManagementTab.jsx
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { Plus, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PropertyListingForm from '../common/PropertyListingForm';
 import { useAddProperty, useFetchProperties, useUpdatePropertyDetails } from '@/hooks/PropertyHooks';
 import PropertyCard from './PropertyCard';
-import { countryGeonameMap } from '@/constants/geonamesMap';
-import { uploadToCloudinary, deleteFromCloudinary } from '@/lib/cloudinaryUtils';
+import { usePropertyForm, transformDataForBackend } from './PropertyFormManager';
+import { uploadImagesToCloudinary, deleteRemovedImages, identifyImagesToDelete } from './PropertyImageManager';
 
 export default function PropertyManagementTab() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -27,153 +26,28 @@ export default function PropertyManagementTab() {
     setValue,
     watch,
     reset,
-    formState: { errors }
-  } = useForm({
-    defaultValues: {
-      propertyName: '',
-      propertyDescription: '',
-      propertyType: '',
-      maxGuests: 1,
-      bedrooms: 1,
-      pricePerNight: 1000,
-      amenities: [],
-      propertyAddress: {
-        houseName: '',
-        district: '',
-        state: '',
-        country: '',
-        pincode: '',
-        landmark: '',
-        coordinates: { latitude: 0, longitude: 0 }
-      },
-      propertyImages: [],
-      propertyImageFiles: [] // Added for new image uploads
-    }
-  });
+    formState: { errors },
+    populateFormForEditing
+  } = usePropertyForm(editingProperty);
 
   const handleEdit = (property) => {
     setEditingProperty(property);
     setShowAddForm(true);
-    
-    // Reset form first to clear any previous values
-    reset();
-    
-    // Helper function to create select option format
-    const createSelectOption = (value, label = value) => ({
-      value: value,
-      label: label
-    });
-
-    // Get country geonameId if available
-    const countryName = property.propertyAddress?.country;
-    const countryGeonameId = countryName ? countryGeonameMap[countryName] : null;
-
-    // Transform existing propertyImages to the format expected by PropertyListingForm
-    const existingImagesForForm = property.propertyImages?.map(img => ({
-      imageUrl: img.imageUrl,
-      preview: img.imageUrl, // Use imageUrl as preview for existing images
-      publicId: img.publicId,
-      isPrimary: img.isPrimary || false,
-      isExisting: true // Flag to indicate this is an existing image (not a new upload)
-    })) || [];
-
-    // Set form values for editing with proper structure
-    const formData = {
-      propertyName: property.propertyName || '',
-      propertyDescription: property.propertyDescription || '',
-      propertyType: property.propertyType || '',
-      maxGuests: property.maxGuests || 1,
-      bedrooms: property.bedrooms || 1,
-      pricePerNight: property.pricePerNight || 1000,
-      amenities: property.amenities || [],
-      propertyAddress: {
-        houseName: property.propertyAddress?.houseName || '',
-        district: property.propertyAddress?.district 
-          ? createSelectOption(property.propertyAddress.district)
-          : '',
-        state: property.propertyAddress?.state 
-          ? createSelectOption('', property.propertyAddress.state)
-          : '',
-        country: property.propertyAddress?.country 
-          ? createSelectOption(countryGeonameId?.toString() || property.propertyAddress.country, property.propertyAddress.country)
-          : '',
-        pincode: property.propertyAddress?.pincode || '',
-        landmark: property.propertyAddress?.landmark || '',
-        coordinates: {
-          latitude: property.propertyAddress?.coordinates?.latitude || 0,
-          longitude: property.propertyAddress?.coordinates?.longitude || 0
-        }
-      },
-      // Ensure all existing images have isExisting flag
-      propertyImages: property.propertyImages?.map(img => ({
-        ...img,
-        isExisting: true // Ensure this flag is set for all existing images
-      })) || [],
-      propertyImageFiles: [] // Initialize as empty for editing
-    };
-    
-    console.log('🔧 Prefilling form with data:', formData);
-    console.log('🖼️ Existing images for form:', existingImagesForForm);
-    
-    // Set each field individually to ensure react-hook-form recognizes them
-    Object.keys(formData).forEach(key => {
-      if (key === 'propertyAddress') {
-        Object.keys(formData.propertyAddress).forEach(addressKey => {
-          if (addressKey === 'coordinates') {
-            setValue(`propertyAddress.coordinates.latitude`, formData.propertyAddress.coordinates.latitude);
-            setValue(`propertyAddress.coordinates.longitude`, formData.propertyAddress.coordinates.longitude);
-          } else {
-            setValue(`propertyAddress.${addressKey}`, formData.propertyAddress[addressKey]);
-          }
-        });
-      } else {
-        setValue(key, formData[key]);
-      }
-    });
+    populateFormForEditing(property);
   };
 
-  const uploadImagesToCloudinary = async (imageFiles) => {
-    const uploadedImages = [];
-    
-    for (const imageFile of imageFiles) {
-      try {
-        console.log('📤 Uploading image to Cloudinary:', imageFile.file.name);
-        const result = await uploadToCloudinary(imageFile.file);
-        console.log('✅ Successfully uploaded image:', result.publicId);
-        uploadedImages.push({
-          imageUrl: result.imageUrl,
-          publicId: result.publicId,
-          isPrimary: imageFile.isPrimary || false
-        });
-      } catch (error) {
-        console.error('❌ Error uploading image to Cloudinary:', error);
-        throw new Error(`Failed to upload image: ${error.message}`);
-      }
-    }
-    
-    return uploadedImages;
-  };
-
-  const deleteRemovedImages = async (imagesToDelete) => {
-    console.log('🗑️ Starting deletion of', imagesToDelete.length, 'images from Cloudinary');
-    
-    for (const image of imagesToDelete) {
-      try {
-        console.log('🗑️ Attempting to delete image:', image.publicId);
-        await deleteFromCloudinary(image.publicId);
-        console.log('✅ Successfully deleted image from Cloudinary:', image.publicId);
-      } catch (error) {
-        console.error('❌ Failed to delete image from Cloudinary:', image.publicId, error);
-        // Continue with other deletions even if one fails
-        // We don't throw here to allow the update to continue
-      }
-    }
-  };
 
   const onSubmit = async (data) => {
     console.log('🚀 Starting form submission...');
     
     try {
+      // Validate minimum image requirement
+      const totalImages = (data.propertyImages?.length || 0) + (data.propertyImageFiles?.length || 0);
+      if (totalImages < 3) {
+        alert('Minimum 3 images are required for property listing');
+        return;
+      }
+      
       // Store original images for comparison (in edit mode)
       const originalImages = editingProperty ? [...editingProperty.propertyImages] : [];
 
@@ -184,7 +58,7 @@ export default function PropertyManagementTab() {
         newImageFilesCount: data.propertyImageFiles?.length || 0,
         originalImages: originalImages?.map(img => ({ 
           publicId: img.publicId, 
-          isExisting: img.isExisting 
+          imageUrl: img.imageUrl
         })),
         formImages: data.propertyImages?.map(img => ({ 
           publicId: img.publicId, 
@@ -192,43 +66,26 @@ export default function PropertyManagementTab() {
         }))
       });
 
-      // STEP 1: Identify which existing images were removed - IMPROVED LOGIC
-      let imagesToDelete = [];
-      
-      if (editingProperty && originalImages.length > 0) {
-        // Get the current existing images from form data (with isExisting flag)
-        const currentExistingImages = data.propertyImages?.filter(img => img.isExisting) || [];
-        
-        console.log('🔍 DEBUG - Image Comparison:', {
-          originalImages: originalImages.map(img => img.publicId),
-          currentExistingImages: currentExistingImages.map(img => img.publicId)
-        });
-
-        // Find images that were in original but NOT in current form data
-        imagesToDelete = originalImages.filter(originalImg => {
-          const existsInCurrent = currentExistingImages.some(currentImg => 
-            currentImg.publicId === originalImg.publicId
-          );
-          if (!existsInCurrent) {
-            console.log('❌ Image marked for deletion:', originalImg.publicId);
-          }
-          return !existsInCurrent;
-        });
-        
-        console.log('📊 DEBUG - Deletion Analysis:', {
-          imagesToDeleteCount: imagesToDelete.length,
-          imagesToDelete: imagesToDelete.map(img => img.publicId)
-        });
-      }
+      // STEP 1: Identify which existing images were removed
+      const imagesToDelete = identifyImagesToDelete(originalImages, data.propertyImages);
 
       // STEP 2: Delete removed images from Cloudinary ONLY if there are any to delete
       if (editingProperty && imagesToDelete.length > 0) {
         console.log('🗑️ Proceeding with deletion of', imagesToDelete.length, 'images');
         setUploadingImages(true);
         try {
-          await deleteRemovedImages(imagesToDelete);
+          const deletionResults = await deleteRemovedImages(imagesToDelete);
+          
+          // Check if any deletions failed
+          const failedDeletions = deletionResults.filter(r => !r.success);
+          if (failedDeletions.length > 0) {
+            console.warn('⚠️ Some image deletions failed:', failedDeletions);
+            // Show a warning but don't block the update
+            alert(`Warning: ${failedDeletions.length} image(s) could not be deleted from Cloudinary. The property will still be updated.`);
+          }
         } catch (error) {
           console.error('❌ Image deletion failed:', error);
+          alert('Warning: Failed to delete some images from Cloudinary. The property will still be updated.');
           // Continue anyway - we don't want to block the entire update if deletion fails
         } finally {
           setUploadingImages(false);
@@ -266,13 +123,13 @@ export default function PropertyManagementTab() {
         }
       }
 
-      // Remove the temporary file references
-      delete data.propertyImageFiles;
+      // STEP 4: Transform data for backend
+      const transformedData = transformDataForBackend(data);
 
       console.log('📦 Final data for submission:', {
-        propertyImages: data.propertyImages?.map(img => ({
+        propertyImages: transformedData.propertyImages?.map(img => ({
           publicId: img.publicId,
-          isExisting: img.isExisting,
+          imageUrl: img.imageUrl,
           isPrimary: img.isPrimary
         }))
       });
@@ -281,24 +138,6 @@ export default function PropertyManagementTab() {
         // Update existing property
         console.log('✏️ Updating existing property:', editingProperty.property_id);
         
-        // Transform address data from select objects to strings
-        const transformedData = {
-          ...data,
-          propertyAddress: {
-            ...data.propertyAddress,
-            // Extract string values from select objects
-            country: typeof data.propertyAddress.country === 'object' 
-              ? data.propertyAddress.country.label 
-              : data.propertyAddress.country,
-            state: typeof data.propertyAddress.state === 'object' 
-              ? data.propertyAddress.state.label 
-              : data.propertyAddress.state,
-            district: typeof data.propertyAddress.district === 'object' 
-              ? data.propertyAddress.district.label 
-              : data.propertyAddress.district,
-          }
-        };
-
         // Prepare the update payload according to your backend format
         const updatePayload = {
           amenities: transformedData.amenities || [],
@@ -345,23 +184,6 @@ export default function PropertyManagementTab() {
         // Add new property via API
         console.log('🆕 Adding new property');
         
-        // Transform address data from select objects to strings for new properties too
-        const transformedData = {
-          ...data,
-          propertyAddress: {
-            ...data.propertyAddress,
-            country: typeof data.propertyAddress.country === 'object' 
-              ? data.propertyAddress.country.label 
-              : data.propertyAddress.country,
-            state: typeof data.propertyAddress.state === 'object' 
-              ? data.propertyAddress.state.label 
-              : data.propertyAddress.state,
-            district: typeof data.propertyAddress.district === 'object' 
-              ? data.propertyAddress.district.label 
-              : data.propertyAddress.district,
-          }
-        };
-
         // Format address fields and transform to backend format
         const addPayload = {
           amenities: transformedData.amenities || [],
