@@ -55,7 +55,13 @@ export default function PropertyListingForm({
       }));
       
       setSelectedImages(existingImagesForDisplay);
-      setValue('propertyImages', existingImages);
+      
+      // Set form values with isExisting flag
+      const existingImagesWithFlag = existingImages.map(img => ({
+        ...img,
+        isExisting: true
+      }));
+      setValue('propertyImages', existingImagesWithFlag);
     }
   }, [isEditing, existingImages, setValue]);
 
@@ -88,7 +94,8 @@ export default function PropertyListingForm({
     const finalPropertyImages = updatedImages.map(img => ({
       imageUrl: img.imageUrl || img.preview, // Use existing URL or preview for new uploads
       publicId: img.publicId,
-      isPrimary: img.isPrimary
+      isPrimary: img.isPrimary,
+      isExisting: img.isExisting // Preserve the isExisting flag
     }));
     setValue('propertyImages', finalPropertyImages);
   };
@@ -97,6 +104,12 @@ export default function PropertyListingForm({
   const removeImage = (index) => {
     const imageToRemove = selectedImages[index];
     const updatedImages = selectedImages.filter((_, i) => i !== index);
+    
+    // Check minimum image requirement (3 images minimum)
+    if (updatedImages.length < 3) {
+      alert('Minimum 3 images are required for property listing');
+      return;
+    }
     
     // If we're removing the primary image, set the first remaining image as primary
     if (imageToRemove.isPrimary && updatedImages.length > 0) {
@@ -111,7 +124,8 @@ export default function PropertyListingForm({
     const finalPropertyImages = updatedImages.map(img => ({
       imageUrl: img.imageUrl || img.preview,
       publicId: img.publicId,
-      isPrimary: img.isPrimary
+      isPrimary: img.isPrimary,
+      isExisting: img.isExisting // Preserve the isExisting flag
     }));
     setValue('propertyImages', finalPropertyImages);
   };
@@ -128,7 +142,8 @@ export default function PropertyListingForm({
     const finalPropertyImages = updatedImages.map(img => ({
       imageUrl: img.imageUrl || img.preview,
       publicId: img.publicId,
-      isPrimary: img.isPrimary
+      isPrimary: img.isPrimary,
+      isExisting: img.isExisting // Preserve the isExisting flag
     }));
     setValue('propertyImages', finalPropertyImages);
   };
@@ -231,7 +246,13 @@ export default function PropertyListingForm({
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
-                  className="text-white p-1 bg-red-500 rounded-full"
+                  disabled={selectedImages.length <= 3}
+                  className={`text-white p-1 rounded-full ${
+                    selectedImages.length <= 3 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                  title={selectedImages.length <= 3 ? 'Minimum 3 images required' : 'Remove image'}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -286,7 +307,7 @@ export default function PropertyListingForm({
           <span className="text-red-500 text-sm">{errors.propertyImages.message}</span>
         )}
         
-        {!isEditing && selectedImages.length < 3 && (
+        {selectedImages.length < 3 && (
           <p className="text-amber-600 text-sm">
             Please upload at least 3 images for your property listing
           </p>
