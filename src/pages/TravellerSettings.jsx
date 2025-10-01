@@ -20,7 +20,6 @@ export default function TravellerSettings() {
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState("profile")
   const [direction, setDirection] = useState(null)
-  const scrollTimeoutRef = useRef(null)
   const containerRef = useRef(null)
   const tabContentRef = useRef(null)
 
@@ -35,56 +34,6 @@ export default function TravellerSettings() {
       setActiveTab(tab)
     }
   }, [searchParams])
-
-  useEffect(() => {
-    const handleWheel = (e) => {
-      const tabContent = tabContentRef.current
-      const isScrollingInContent =
-        tabContent && (tabContent.contains(e.target) || e.target.closest("[data-radix-tabs-content]"))
-
-      if (isScrollingInContent && tabContent) {
-        const { scrollTop, scrollHeight, clientHeight } = tabContent
-        const isAtTop = scrollTop <= 5
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5
-
-        if ((e.deltaY > 0 && !isAtBottom) || (e.deltaY < 0 && !isAtTop)) {
-          return
-        }
-      }
-
-      e.preventDefault()
-
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current)
-      }
-
-      scrollTimeoutRef.current = setTimeout(() => {
-        const currentIndex = tabs.indexOf(activeTab)
-        let nextIndex
-
-        if (e.deltaY > 0) {
-          nextIndex = Math.min(currentIndex + 1, tabs.length - 1)
-        } else {
-          nextIndex = Math.max(currentIndex - 1, 0)
-        }
-
-        if (nextIndex !== currentIndex) {
-          handleTabChange(tabs[nextIndex])
-        }
-      }, 50)
-    }
-
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener("wheel", handleWheel, { passive: false })
-      return () => {
-        container.removeEventListener("wheel", handleWheel)
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current)
-        }
-      }
-    }
-  }, [activeTab])
 
   const handleTabChange = (value) => {
     navigate(`?tab=${value}`, { replace: true })

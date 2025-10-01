@@ -1,5 +1,5 @@
 // components/registration/PropertyListingForm.jsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,8 @@ export default function PropertyListingForm({
   setValue,
   watch,
   isLoading,
+  isEditing = false,
+  existingImages = []
 }) {
   const [selectedImages, setSelectedImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -41,13 +43,30 @@ export default function PropertyListingForm({
   // Watch amenities
   const amenities = watch('amenities') || [];
 
+  // Initialize existing images when editing
+  useEffect(() => {
+    if (isEditing && existingImages && existingImages.length > 0) {
+      const existingImagesForDisplay = existingImages.map(img => ({
+        imageUrl: img.imageUrl,
+        preview: img.imageUrl,
+        publicId: img.publicId,
+        isPrimary: img.isPrimary || false,
+        isExisting: true // Flag to identify existing images
+      }));
+      
+      setSelectedImages(existingImagesForDisplay);
+      setValue('propertyImages', existingImages);
+    }
+  }, [isEditing, existingImages, setValue]);
+
   // Handle image selection (not upload)
   const handleImageSelect = (event) => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
     
     // Check if we've reached the maximum number of images (e.g., 10)
-    if (selectedImages.length + files.length > 10) {
+    const currentImageCount = selectedImages.length;
+    if (currentImageCount + files.length > 10) {
       alert('Maximum 10 images allowed');
       return;
     }
@@ -55,18 +74,46 @@ export default function PropertyListingForm({
     const newImages = files.map(file => ({
       file,
       preview: URL.createObjectURL(file),
-      isPrimary: selectedImages.length === 0 // First image is primary by default
+      isPrimary: currentImageCount === 0 && !selectedImages.some(img => img.isPrimary), // Set as primary only if no primary exists
+      isExisting: false // Flag to identify new uploads
     }));
     
-    setSelectedImages(prev => [...prev, ...newImages]);
-    setValue('propertyImageFiles', [...selectedImages, ...newImages]);
+    const updatedImages = [...selectedImages, ...newImages];
+    setSelectedImages(updatedImages);
+    
+    // Update both form fields
+    setValue('propertyImageFiles', updatedImages.filter(img => !img.isExisting));
+    
+    // Combine existing images with new uploads for the final propertyImages
+    const finalPropertyImages = updatedImages.map(img => ({
+      imageUrl: img.imageUrl || img.preview, // Use existing URL or preview for new uploads
+      publicId: img.publicId,
+      isPrimary: img.isPrimary
+    }));
+    setValue('propertyImages', finalPropertyImages);
   };
 
   // Remove an image
   const removeImage = (index) => {
+    const imageToRemove = selectedImages[index];
     const updatedImages = selectedImages.filter((_, i) => i !== index);
+    
+    // If we're removing the primary image, set the first remaining image as primary
+    if (imageToRemove.isPrimary && updatedImages.length > 0) {
+      updatedImages[0].isPrimary = true;
+    }
+    
     setSelectedImages(updatedImages);
-    setValue('propertyImageFiles', updatedImages);
+    
+    // Update form values
+    setValue('propertyImageFiles', updatedImages.filter(img => !img.isExisting));
+    
+    const finalPropertyImages = updatedImages.map(img => ({
+      imageUrl: img.imageUrl || img.preview,
+      publicId: img.publicId,
+      isPrimary: img.isPrimary
+    }));
+    setValue('propertyImages', finalPropertyImages);
   };
 
   // Set primary image
@@ -76,7 +123,14 @@ export default function PropertyListingForm({
       isPrimary: i === index
     }));
     setSelectedImages(updatedImages);
-    setValue('propertyImageFiles', updatedImages);
+    
+    // Update form values
+    const finalPropertyImages = updatedImages.map(img => ({
+      imageUrl: img.imageUrl || img.preview,
+      publicId: img.publicId,
+      isPrimary: img.isPrimary
+    }));
+    setValue('propertyImages', finalPropertyImages);
   };
 
   // Add custom amenity
@@ -99,11 +153,33 @@ export default function PropertyListingForm({
     setValue(fieldName, numericValue);
   };
 
+  // Different validation and UI text based on editing mode
+  const imageLabel = isEditing ? 'Update Property Images' : 'Property Images *';
+  const imageDescription = isEditing 
+    ? 'Update your property images. Existing images will be kept unless removed.'
+    : 'Upload at least 3 images of your property';
+
+  const descriptionValidation = isEditing 
+    ? { required: 'Property description is required' }
+    : { 
+        required: 'Property description is required',
+        minLength: {
+          value: 100,
+          message: 'Please provide at least 100 characters about your property'
+        }
+      };
+
+  const submitButtonText = isEditing ? 'Update Property' : 'Add Property';
+
   return (
     <div className="space-y-6">
       <div className="border-b pb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Property Information</h2>
-        <p className="text-gray-600">Tell us about your property</p>
+        <h2 className="text-2xl font-bold text-gray-800">
+          {isEditing ? 'Edit Property Information' : 'Property Information'}
+        </h2>
+        <p className="text-gray-600">
+          {isEditing ? 'Update your property details' : 'Tell us about your property'}
+        </p>
       </div>
 
       {/* Property Name */}
@@ -123,24 +199,25 @@ export default function PropertyListingForm({
         <Label htmlFor="propertyDescription">Property Description *</Label>
         <Textarea 
           id="propertyDescription"
-          {...register('propertyDescription', { 
-            required: 'Property description is required',
-            minLength: {
-              value: 100,
-              message: 'Please provide at least 100 characters about your property'
-            }
-          })} 
+          {...register('propertyDescription', descriptionValidation)} 
           placeholder="Describe your property, its unique features, nearby attractions, and what makes it special..."
           rows={4}
           className="mt-1"
         />
-        {errors.propertyDescription && <span className="text-red-500 text-sm">{errors.propertyDescription.message}</span>}
+        {errors.propertyDescription && (
+          <span className="text-red-500 text-sm">{errors.propertyDescription.message}</span>
+        )}
+        {!isEditing && (
+          <p className="text-sm text-gray-500 mt-1">
+            Minimum 100 characters required for new listings
+          </p>
+        )}
       </div>
 
       {/* Property Images */}
       <div>
-        <Label>Property Images *</Label>
-        <p className="text-sm text-gray-500 mb-2">Upload at least 3 images of your property</p>
+        <Label>{imageLabel}</Label>
+        <p className="text-sm text-gray-500 mb-2">{imageDescription}</p>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
           {selectedImages.map((image, index) => (
@@ -173,6 +250,11 @@ export default function PropertyListingForm({
                   Set Primary
                 </button>
               )}
+              {image.isExisting && (
+                <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                  Existing
+                </div>
+              )}
             </div>
           ))}
           
@@ -180,7 +262,12 @@ export default function PropertyListingForm({
             <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400">
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <Upload className="w-8 h-8 mb-2 text-gray-500" />
-                <p className="text-sm text-gray-500">Upload Image</p>
+                <p className="text-sm text-gray-500">
+                  {isEditing ? 'Add More Images' : 'Upload Image'}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {selectedImages.length}/10 images
+                </p>
               </div>
               <input 
                 ref={fileInputRef}
@@ -197,6 +284,12 @@ export default function PropertyListingForm({
         
         {errors.propertyImages && (
           <span className="text-red-500 text-sm">{errors.propertyImages.message}</span>
+        )}
+        
+        {!isEditing && selectedImages.length < 3 && (
+          <p className="text-amber-600 text-sm">
+            Please upload at least 3 images for your property listing
+          </p>
         )}
       </div>
 
@@ -230,7 +323,7 @@ export default function PropertyListingForm({
             {...register('maxGuests', { 
               required: 'Maximum guests is required',
               min: { value: 1, message: 'Must accommodate at least 1 guest' },
-              valueAsNumber: true // This ensures the value is sent as number
+              valueAsNumber: true
             })} 
             onChange={(e) => handleNumericChange('maxGuests', e.target.value)}
             className="mt-1"
@@ -246,7 +339,7 @@ export default function PropertyListingForm({
             {...register('bedrooms', { 
               required: 'Number of bedrooms is required',
               min: { value: 0, message: 'Must be 0 or more' },
-              valueAsNumber: true // This ensures the value is sent as number
+              valueAsNumber: true
             })} 
             onChange={(e) => handleNumericChange('bedrooms', e.target.value)}
             className="mt-1"
@@ -265,7 +358,7 @@ export default function PropertyListingForm({
             required: 'Price per night is required',
             min: { value: 100, message: 'Minimum price is ₹100 per night' },
             max: { value: 50000, message: 'Maximum price is ₹50,000 per night' },
-            valueAsNumber: true // This ensures the value is sent as number
+            valueAsNumber: true
           })} 
           onChange={(e) => handleNumericChange('pricePerNight', e.target.value)}
           placeholder="e.g., 2500"

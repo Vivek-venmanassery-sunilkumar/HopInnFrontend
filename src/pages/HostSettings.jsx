@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 import { ChevronRight, Home } from 'lucide-react';
 import HikerLogo from '@/assets/hiker-logo.svg';
 import HostProfileTab from '@/components/host-settings/HostProfileTab';
+import PropertyManagementTab from '@/components/host-settings/PropertyManagementTab';
 import ScrollingRoadAnimation from '@/components/animation/ScrollingRoadAnimation';
 
 export default function HostSettings() {
@@ -11,11 +12,8 @@ export default function HostSettings() {
     const [searchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('profile');
     const [direction, setDirection] = useState(null);
-    const scrollTimeoutRef = useRef(null);
-    const containerRef = useRef(null);
-    const tabContentRef = useRef(null);
 
-    const tabs = ['profile'];
+    const tabs = ['profile', 'properties'];
 
     useEffect(() => {
         const tab = searchParams.get('tab');
@@ -26,56 +24,6 @@ export default function HostSettings() {
             setActiveTab(tab);
         }
     }, [searchParams]);
-
-    useEffect(() => {
-        const handleWheel = (e) => {
-            const tabContent = tabContentRef.current;
-            const isScrollingInContent =
-                tabContent && (tabContent.contains(e.target) || e.target.closest("[data-radix-tabs-content]"))
-
-            if (isScrollingInContent && tabContent) {
-                const { scrollTop, scrollHeight, clientHeight } = tabContent;
-                const isAtTop = scrollTop <= 5;
-                const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5;
-
-                if ((e.deltaY > 0 && !isAtBottom) || (e.deltaY < 0 && !isAtTop)) {
-                    return;
-                }
-            }
-
-            e.preventDefault();
-
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
-
-            scrollTimeoutRef.current = setTimeout(() => {
-                const currentIndex = tabs.indexOf(activeTab);
-                let nextIndex;
-
-                if (e.deltaY > 0) {
-                    nextIndex = Math.min(currentIndex + 1, tabs.length - 1);
-                } else {
-                    nextIndex = Math.max(currentIndex - 1, 0);
-                }
-
-                if (nextIndex !== currentIndex) {
-                    navigate(`?tab=${tabs[nextIndex]}`, { replace: true });
-                }
-            }, 50);
-        }
-
-        const container = containerRef.current;
-        if (container) {
-            container.addEventListener('wheel', handleWheel, { passive: false });
-            return () => {
-                container.removeEventListener('wheel', handleWheel);
-                if (scrollTimeoutRef.current) {
-                    clearTimeout(scrollTimeoutRef.current);
-                }
-            }
-        }
-    }, [activeTab, navigate]);
 
     const handleTabChange = (value) => {
         navigate(`?tab=${value}`, { replace: true });
@@ -135,7 +83,7 @@ export default function HostSettings() {
                         <p className="text-[#8B4513]">Manage your host profile and preferences</p>
                     </div>
 
-                    <div ref={containerRef} className="flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-hidden">
                         <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full">
                             <div className="grid grid-cols-12 gap-8 h-full">
                                 <aside className="col-span-12 lg:col-span-3">
@@ -158,16 +106,39 @@ export default function HostSettings() {
                                                     Profile Settings
                                                 </span>
                                             </TabsTrigger>
+                                            <TabsTrigger
+                                                value="properties"
+                                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#F68241] data-[state=active]:to-[#F3CA62] data-[state=active]:text-white justify-start px-4 py-3 rounded-lg hover:bg-[#F68241]/10 transition-all duration-200 w-full text-left font-medium text-[#8B4513]"
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                                        />
+                                                    </svg>
+                                                    Property Management
+                                                </span>
+                                            </TabsTrigger>
                                         </TabsList>
                                     </div>
                                 </aside>
 
                                 <section className="col-span-12 lg:col-span-9 h-full relative">
+                                    {/* Profile Tab */}
                                     <div
-                                        ref={activeTab === 'profile' ? tabContentRef : null}
                                         className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] h-full flex flex-col p-6 overflow-auto absolute inset-0 ${getAnimationClass('profile')}`}
                                     >
                                         <HostProfileTab />
+                                    </div>
+
+                                    {/* Properties Tab */}
+                                    <div
+                                        className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] h-full flex flex-col p-6 overflow-auto absolute inset-0 ${getAnimationClass('properties')}`}
+                                    >
+                                        <PropertyManagementTab />
                                     </div>
                                 </section>
                             </div>
