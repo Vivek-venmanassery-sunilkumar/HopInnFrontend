@@ -174,7 +174,12 @@ export default function AdminSideKyc() {
                           <CardContent className="p-4">
                             <div className="flex justify-between items-center">
                               <div>
-                                <h4 className="font-medium">User ID: {application.userId}</h4>
+                                <h4 className="font-medium">
+                                  {application.firstName} {application.lastName || ''}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {application.email}
+                                </p>
                                 <p className="text-sm text-muted-foreground">
                                   Status: {application.verificationStatus}
                                 </p>
