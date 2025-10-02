@@ -1,4 +1,4 @@
-import { useFetchHostProfile } from '@/hooks/HostHooks';
+import { useFetchHostProfile, useUpdateHostProfile } from '@/hooks/HostHooks';
 import { Loader2, Calendar, Briefcase, Languages, Edit2, Save, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,30 +6,44 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { LANGUAGES } from '@/constants/languages';
 
 export default function HostProfileTab() {
   const { data: profile, isLoading, error } = useFetchHostProfile();
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+  const updateProfileMutation = useUpdateHostProfile();
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+    defaultValues: {
+      profession: '',
+      about: '',
+      knownLanguages: []
+    }
+  });
   const [isEditing, setIsEditing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const watchedLanguages = watch('knownLanguages');
 
   useEffect(() => {
     if (profile) {
       setValue('profession', profile.profession || '');
       setValue('about', profile.about || '');
+      setValue('knownLanguages', profile.knownLanguages || []);
     }
   }, [profile, setValue]);
 
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
     try {
-      // Your update mutation here
-      console.log('Submitting:', data);
+      // Prepare data for API call
+      const updateData = {
+        profession: data.profession,
+        about: data.about,
+        knownLanguages: data.knownLanguages
+      };
+
+      await updateProfileMutation.mutateAsync(updateData);
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -115,13 +129,31 @@ export default function HostProfileTab() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {profile.knownLanguages?.map((lang, index) => (
-              <span key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm">
-                {lang}
-              </span>
-            )) || 'No languages specified'}
-          </div>
+          {isEditing ? (
+            <div>
+              <label className="text-sm font-medium">Known Languages</label>
+              <Select
+                isMulti
+                options={LANGUAGES}
+                value={watchedLanguages?.map(lang => ({ value: lang, label: lang })) || []}
+                onChange={(selectedOptions) => {
+                  const languages = selectedOptions?.map(option => option.value) || [];
+                  setValue('knownLanguages', languages);
+                }}
+                className="mt-1"
+                placeholder="Select languages you know..."
+                classNamePrefix="react-select"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {profile.knownLanguages?.map((lang, index) => (
+                <span key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  {lang}
+                </span>
+              )) || 'No languages specified'}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -130,8 +162,8 @@ export default function HostProfileTab() {
           <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          <Button type="submit" disabled={updateProfileMutation.isPending}>
+            {updateProfileMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Changes
           </Button>
         </div>
