@@ -59,5 +59,6 @@ export const googleLogin = async (data)=>{
         }
     }catch(error){
         const serverMessage = error.response?.data?.detail?.message;
+        throw new Error(serverMessage)
     }
 }

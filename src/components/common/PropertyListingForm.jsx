@@ -359,7 +359,7 @@ export default function PropertyListingForm({
             type="number" 
             {...register('bedrooms', { 
               required: 'Number of bedrooms is required',
-              min: { value: 0, message: 'Must be 0 or more' },
+              min: { value: 1, message: 'Must be 1 or more' },
               valueAsNumber: true
             })} 
             onChange={(e) => handleNumericChange('bedrooms', e.target.value)}

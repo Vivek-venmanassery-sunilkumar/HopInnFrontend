@@ -36,10 +36,7 @@ export default function PropertyManagementTab() {
     populateFormForEditing(property);
   };
 
-
   const onSubmit = async (data) => {
-    console.log('🚀 Starting form submission...');
-    
     try {
       // Validate minimum image requirement
       const totalImages = (data.propertyImages?.length || 0) + (data.propertyImageFiles?.length || 0);
@@ -51,27 +48,11 @@ export default function PropertyManagementTab() {
       // Store original images for comparison (in edit mode)
       const originalImages = editingProperty ? [...editingProperty.propertyImages] : [];
 
-      console.log('🔍 DEBUG - Image Analysis:', {
-        isEditing: !!editingProperty,
-        originalImagesCount: originalImages.length,
-        formImagesCount: data.propertyImages?.length || 0,
-        newImageFilesCount: data.propertyImageFiles?.length || 0,
-        originalImages: originalImages?.map(img => ({ 
-          publicId: img.publicId, 
-          imageUrl: img.imageUrl
-        })),
-        formImages: data.propertyImages?.map(img => ({ 
-          publicId: img.publicId, 
-          isExisting: img.isExisting 
-        }))
-      });
-
       // STEP 1: Identify which existing images were removed
       const imagesToDelete = identifyImagesToDelete(originalImages, data.propertyImages);
 
       // STEP 2: Delete removed images from Cloudinary ONLY if there are any to delete
       if (editingProperty && imagesToDelete.length > 0) {
-        console.log('🗑️ Proceeding with deletion of', imagesToDelete.length, 'images');
         setUploadingImages(true);
         try {
           const deletionResults = await deleteRemovedImages(imagesToDelete);
@@ -79,24 +60,17 @@ export default function PropertyManagementTab() {
           // Check if any deletions failed
           const failedDeletions = deletionResults.filter(r => !r.success);
           if (failedDeletions.length > 0) {
-            console.warn('⚠️ Some image deletions failed:', failedDeletions);
-            // Show a warning but don't block the update
             alert(`Warning: ${failedDeletions.length} image(s) could not be deleted from Cloudinary. The property will still be updated.`);
           }
         } catch (error) {
-          console.error('❌ Image deletion failed:', error);
           alert('Warning: Failed to delete some images from Cloudinary. The property will still be updated.');
-          // Continue anyway - we don't want to block the entire update if deletion fails
         } finally {
           setUploadingImages(false);
         }
-      } else if (editingProperty) {
-        console.log('✅ No images to delete - all existing images preserved');
       }
 
       // STEP 3: Upload new images to Cloudinary
       if (data.propertyImageFiles && data.propertyImageFiles.length > 0) {
-        console.log('📤 Uploading', data.propertyImageFiles.length, 'new images');
         setUploadingImages(true);
         try {
           const uploadedImages = await uploadImagesToCloudinary(data.propertyImageFiles);
@@ -107,14 +81,7 @@ export default function PropertyManagementTab() {
           
           // Update the propertyImages with the combined array
           data.propertyImages = allImages;
-          
-          console.log('✅ Final image set:', {
-            existingImagesCount: existingImages.length,
-            uploadedImagesCount: uploadedImages.length,
-            totalImagesCount: allImages.length
-          });
         } catch (error) {
-          console.error('❌ Image upload failed:', error);
           alert('Failed to upload some images. Please try again.');
           setUploadingImages(false);
           return;
@@ -126,19 +93,8 @@ export default function PropertyManagementTab() {
       // STEP 4: Transform data for backend
       const transformedData = transformDataForBackend(data);
 
-      console.log('📦 Final data for submission:', {
-        propertyImages: transformedData.propertyImages?.map(img => ({
-          publicId: img.publicId,
-          imageUrl: img.imageUrl,
-          isPrimary: img.isPrimary
-        }))
-      });
-
       if (editingProperty) {
         // Update existing property
-        console.log('✏️ Updating existing property:', editingProperty.property_id);
-        
-        // Prepare the update payload according to your backend format
         const updatePayload = {
           amenities: transformedData.amenities || [],
           bedrooms: parseInt(transformedData.bedrooms) || 1,
@@ -167,10 +123,7 @@ export default function PropertyManagementTab() {
           property_id: editingProperty.property_id
         };
 
-        console.log('📤 Sending update payload:', updatePayload);
         await updatePropertyMutation.mutateAsync(updatePayload);
-        
-        console.log('✅ Property updated successfully');
         
         // Reset form and state
         reset();
@@ -182,9 +135,6 @@ export default function PropertyManagementTab() {
         
       } else {
         // Add new property via API
-        console.log('🆕 Adding new property');
-        
-        // Format address fields and transform to backend format
         const addPayload = {
           amenities: transformedData.amenities || [],
           bedrooms: parseInt(transformedData.bedrooms) || 1,
@@ -212,22 +162,17 @@ export default function PropertyManagementTab() {
           propertyType: transformedData.propertyType
         };
 
-        console.log('📤 Sending add payload:', addPayload);
         await addPropertyMutation.mutateAsync(addPayload);
-        
-        console.log('✅ Property added successfully');
         reset();
         setShowAddForm(false);
         refetch();
       }
     } catch (error) {
-      console.error('❌ Failed to save property:', error);
       alert(`Failed to save property: ${error.message}`);
     }
   };
 
   const handleCancel = () => {
-    console.log('❌ Form cancelled');
     setShowAddForm(false);
     setEditingProperty(null);
     reset();
@@ -281,7 +226,7 @@ export default function PropertyManagementTab() {
               watch={watch}
               isLoading={isLoading}
               isEditing={!!editingProperty}
-              existingImages={editingProperty?.propertyImages} // Pass existing images here
+              existingImages={editingProperty?.propertyImages}
             />
             
             <div className="flex gap-4 pt-4">

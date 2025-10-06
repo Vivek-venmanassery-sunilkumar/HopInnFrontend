@@ -79,8 +79,6 @@ export const usePropertyForm = (editingProperty = null) => {
       propertyImageFiles: [] // Initialize as empty for editing
     };
     
-    console.log('🔧 Prefilling form with data:', formData);
-    console.log('🖼️ Original property images:', property.propertyImages);
     
     // Set each field individually to ensure react-hook-form recognizes them
     Object.keys(formData).forEach(key => {

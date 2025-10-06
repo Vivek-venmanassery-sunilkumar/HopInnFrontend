@@ -55,7 +55,7 @@ export default function LoginForm() {
         }
     }
 
-    const handleGoogleError = ()=>{
+    const handleGoogleError = (e)=>{
         console.error("Google login failed")
     };
 

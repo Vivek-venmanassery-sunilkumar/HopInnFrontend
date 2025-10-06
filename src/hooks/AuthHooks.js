@@ -66,5 +66,9 @@ export function useLogin(){
 export function useGoogleLogin(){
     return useMutation({
         mutationFn: googleLogin,
+        onError: (error)=>{
+            const message = error.message
+            toast.error(message)
+        }
     })
 }
