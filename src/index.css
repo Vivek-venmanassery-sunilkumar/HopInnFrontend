@@ -247,3 +247,17 @@
   animation: scroll-road 3s linear infinite;
 }
 
+/* Hotel Filling Loader Animations */
+@keyframes hotel-fill {
+  0% {
+    height: 0%;
+  }
+  100% {
+    height: 100%;
+  }
+}
+
+.animate-hotel-fill {
+  animation: hotel-fill 1.5s ease-in-out forwards;
+}
+

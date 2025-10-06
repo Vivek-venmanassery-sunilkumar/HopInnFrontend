@@ -97,7 +97,7 @@ const RejectedStatusAlert = () => (
 );
 
 // Upload Section Component
-const UploadSection = ({ inputRef, handleFileChange, error }) => (
+const UploadSection = ({ inputRef, handleFileChange, error, isUploading, uploadProgress }) => (
   <Card>
     <CardContent className="p-6">
       <div className="space-y-6">
@@ -110,14 +110,43 @@ const UploadSection = ({ inputRef, handleFileChange, error }) => (
 
         <div className="space-y-4">
           <div 
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition-colors bg-gray-50"
-            onClick={() => inputRef.current?.click()}
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors relative overflow-hidden ${
+              isUploading 
+                ? 'border-blue-400 bg-blue-50 cursor-not-allowed' 
+                : 'border-gray-300 bg-gray-50 cursor-pointer hover:border-blue-400'
+            }`}
+            onClick={() => !isUploading && inputRef.current?.click()}
           >
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <Upload className="w-6 h-6 text-blue-600" />
+            {/* Upload Progress Overlay */}
+            {isUploading && (
+              <div className="absolute inset-0 bg-blue-50/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
+                <p className="font-medium text-blue-700 mb-2">Uploading your document...</p>
+                <div className="w-full max-w-xs bg-blue-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-blue-600 mt-2">{uploadProgress}% complete</p>
+              </div>
+            )}
+
+            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+              isUploading ? 'bg-blue-200' : 'bg-blue-100'
+            }`}>
+              {isUploading ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              ) : (
+                <Upload className="w-6 h-6 text-blue-600" />
+              )}
             </div>
-            <p className="font-medium text-gray-700">Click to upload or drag and drop</p>
-            <p className="text-sm text-gray-500 mt-1">JPG, PNG (Max 5MB)</p>
+            <p className={`font-medium ${isUploading ? 'text-blue-700' : 'text-gray-700'}`}>
+              {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+            </p>
+            <p className={`text-sm mt-1 ${isUploading ? 'text-blue-600' : 'text-gray-500'}`}>
+              {isUploading ? 'Please wait while we process your document' : 'JPG, PNG (Max 5MB)'}
+            </p>
             <Input
               id="kyc-upload"
               type="file"
@@ -125,6 +154,7 @@ const UploadSection = ({ inputRef, handleFileChange, error }) => (
               ref={inputRef}
               onChange={handleFileChange}
               className="hidden"
+              disabled={isUploading}
             />
           </div>
 
@@ -148,6 +178,8 @@ export default function KycTab() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const inputRef = useRef();
 
   // Fetch KYC details on mount
@@ -185,8 +217,31 @@ export default function KycTab() {
     setShowConfirm(false);
     if (!selectedFile) return;
     
+    setIsUploading(true);
+    setUploadProgress(0);
+    setError('');
+    
     try {
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + Math.random() * 15;
+        });
+      }, 200);
+
       const result = await uploadToCloudinary(selectedFile);
+      
+      // Complete the progress
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      // Small delay to show 100% completion
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const payload = {
         kycImageUrl: result.imageUrl,
         kycImagePublicId: result.publicId,
@@ -205,6 +260,9 @@ export default function KycTab() {
       }
     } catch (err) {
       setError('Failed to upload image: ' + err.message);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -295,7 +353,9 @@ export default function KycTab() {
         <UploadSection 
           inputRef={inputRef} 
           handleFileChange={handleFileChange} 
-          error={error} 
+          error={error}
+          isUploading={isUploading}
+          uploadProgress={uploadProgress}
         />
       )}
 
@@ -324,19 +384,19 @@ export default function KycTab() {
               <Button 
                 variant="outline" 
                 onClick={handleCancel}
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || isUploading}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleConfirm}
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || isUploading}
                 className="min-w-[100px]"
               >
-                {mutation.isPending ? (
+                {(mutation.isPending || isUploading) ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Uploading...
+                    {isUploading ? 'Uploading...' : 'Processing...'}
                   </>
                 ) : (
                   'Confirm'
