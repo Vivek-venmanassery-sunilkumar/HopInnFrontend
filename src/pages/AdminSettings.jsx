@@ -168,10 +168,6 @@ export default function AdminSettings() {
                     ref={activeTab === "kyc" ? tabContentRef : null}
                     className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] h-full flex flex-col p-6 overflow-auto absolute inset-0 ${getAnimationClass("kyc")}`}
                   >
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-[#2D5016] mb-2">KYC Verification Management</h2>
-                      <p className="text-[#8B4513]">Review and manage user verification requests</p>
-                    </div>
                     <AdminSideKyc />
                   </div>
                   <div
