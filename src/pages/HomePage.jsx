@@ -3,6 +3,7 @@ import Logo from '@/assets/hiker-logo.svg'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import HomePageFilter from '@/components/home-page/HomePageFilter'
+import PropertyCard from '@/components/home-page/PropertyCard'
 import { useSearchProperties, useSearchGuides } from '@/hooks/HomePageFilterHook'
 import { useState, useEffect } from 'react'
 
@@ -135,18 +136,10 @@ export default function HomePage() {
                             {activeTab === 'properties' && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {searchResults.properties?.properties?.map((property) => (
-                                        <div key={property.id} className="bg-white rounded-lg shadow-md p-4">
-                                            <h3 className="text-lg font-semibold mb-2">{property.propertyName}</h3>
-                                            <p className="text-gray-600 mb-2">{property.propertyDescription}</p>
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-sm text-gray-500">
-                                                    {property.maxGuests} guests • {property.bedrooms} bedrooms
-                                                </span>
-                                                <span className="text-lg font-bold text-primary">
-                                                    ${property.pricePerNight}/night
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <PropertyCard 
+                                            key={property.id} 
+                                            property={property} 
+                                        />
                                     ))}
                                 </div>
                             )}
