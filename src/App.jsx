@@ -8,6 +8,8 @@ import { Provider } from 'react-redux'
 import { store } from '@/redux/store'
 import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings, 
   RegistrationForm, GuideSettings, GuideProtectedRoute, HostProtectedRoute, HostSettings} from '@/routes'
+import PropertyDetails from './pages/PropertyDetails'
+import NotFound from './components/common/NotFound'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 
@@ -70,6 +72,16 @@ function App() {
               </HostProtectedRoute>
             }
             />
+            <Route
+              path="/property/:id"
+              element={
+                <TravellerProtectedRoute>
+                  <PropertyDetails />
+                </TravellerProtectedRoute>
+              }
+            />
+            {/* Catch-all route for 404 */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
         <Toaster 

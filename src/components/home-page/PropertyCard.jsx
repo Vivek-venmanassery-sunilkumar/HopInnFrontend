@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Users, Bed, IndianRupee, Star } from 'lucide-react';
 
 export default function PropertyCard({ property }) {
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
   
   // Get primary image URL from the API response
   const primaryImage = property.primaryImageUrl || '';
@@ -10,11 +12,16 @@ export default function PropertyCard({ property }) {
   // Get location info
   const location = `${property.district}, ${property.state}`;
 
+  const handleCardClick = () => {
+    navigate(`/property/${property.id}`);
+  };
+
   return (
     <div 
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       {/* Property Image */}
       <div className="relative h-48 w-full">
