@@ -4,27 +4,55 @@ import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import HomePageFilter from '@/components/home-page/HomePageFilter'
 import { useSearchProperties, useSearchGuides } from '@/hooks/HomePageFilterHook'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function HomePage() {
     const navigate = useNavigate()
     const user = useSelector((state)=>state.auth.user)
     const [filterParams, setFilterParams] = useState(null)
     const [activeTab, setActiveTab] = useState('properties')
-    const { data: propertiesData, isLoading: isPropertiesLoading, error: propertiesError } = useSearchProperties(filterParams, !!filterParams)
-    const { data: guidesData, isLoading: isGuidesLoading, error: guidesError } = useSearchGuides(filterParams, !!filterParams)
+    const [initialLoad, setInitialLoad] = useState(true)
+    
+    // Load all properties on initial page load
+    const initialParams = {
+        destination: '',
+        guests: 1,
+        fromDate: '',
+        toDate: '',
+        latitude: '',
+        longitude: '',
+        all: true,
+        page: 1,
+        pageSize: 10
+    }
+    
+    const { data: propertiesData, isLoading: isPropertiesLoading, error: propertiesError } = useSearchProperties(
+        initialLoad ? initialParams : filterParams, 
+        initialLoad || !!filterParams
+    )
+    const { data: guidesData, isLoading: isGuidesLoading, error: guidesError } = useSearchGuides(
+        initialLoad ? initialParams : filterParams, 
+        initialLoad || !!filterParams
+    )
     
     const isSearching = isPropertiesLoading || isGuidesLoading
-    const searchResults = filterParams ? {
+    const searchResults = (initialLoad || filterParams) ? {
         properties: propertiesData,
         guides: guidesData
     } : null
 
+    // Load all properties when component mounts
+    useEffect(() => {
+        setInitialLoad(true)
+    }, [])
+
     const handleFilter = (filterData) => {
+        setInitialLoad(false)
         setFilterParams(filterData)
     }
 
     const handleClear = () => {
+        setInitialLoad(true)
         setFilterParams(null)
     }
 
@@ -98,21 +126,24 @@ export default function HomePage() {
                     {searchResults && (
                         <div className="mt-8">
                             <h2 className="text-2xl font-bold mb-4">
-                                {activeTab === 'properties' ? 'Properties' : 'Guides'} Found
+                                {initialLoad 
+                                    ? `All ${activeTab === 'properties' ? 'Properties' : 'Guides'}`
+                                    : `${activeTab === 'properties' ? 'Properties' : 'Guides'} Found`
+                                }
                             </h2>
                             
                             {activeTab === 'properties' && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {searchResults.properties?.properties?.map((property) => (
                                         <div key={property.id} className="bg-white rounded-lg shadow-md p-4">
-                                            <h3 className="text-lg font-semibold mb-2">{property.property_name}</h3>
-                                            <p className="text-gray-600 mb-2">{property.property_description}</p>
+                                            <h3 className="text-lg font-semibold mb-2">{property.propertyName}</h3>
+                                            <p className="text-gray-600 mb-2">{property.propertyDescription}</p>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-sm text-gray-500">
-                                                    {property.max_guests} guests • {property.bedrooms} bedrooms
+                                                    {property.maxGuests} guests • {property.bedrooms} bedrooms
                                                 </span>
                                                 <span className="text-lg font-bold text-primary">
-                                                    ${property.price_per_night}/night
+                                                    ${property.pricePerNight}/night
                                                 </span>
                                             </div>
                                         </div>
@@ -142,7 +173,7 @@ export default function HomePage() {
                     )}
 
                     {/* Welcome Message when no search */}
-                    {!searchResults && (
+                    {!searchResults && !isSearching && (
                         <div className="text-center py-12">
                             <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome to HopInn</h1>
                             <p className="text-gray-600 text-lg">

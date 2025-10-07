@@ -5,28 +5,20 @@ import { authApi } from "@/axios/auth.axios";
 export const searchProperties = async (filterParams) => {
     try {
         // Convert filter params to query string for properties (camelCase)
+        // All parameters are mandatory for the filter to work properly
         const queryParams = new URLSearchParams()
         
-        if (filterParams.destination) {
-            queryParams.append('destination', filterParams.destination)
-        }
-        if (filterParams.guests) {
-            queryParams.append('guests', filterParams.guests)
-        }
-        if (filterParams.fromDate) {
-            queryParams.append('fromDate', filterParams.fromDate)
-        }
-        if (filterParams.toDate) {
-            queryParams.append('toDate', filterParams.toDate)
-        }
-        if (filterParams.latitude) {
-            queryParams.append('latitude', filterParams.latitude)
-        }
-        if (filterParams.longitude) {
-            queryParams.append('longitude', filterParams.longitude)
-        }
+        queryParams.append('destination', filterParams.destination || '')
+        queryParams.append('guests', filterParams.guests || '')
+        queryParams.append('fromDate', filterParams.fromDate || '')
+        queryParams.append('toDate', filterParams.toDate || '')
+        queryParams.append('latitude', filterParams.latitude || '')
+        queryParams.append('longitude', filterParams.longitude || '')
+        queryParams.append('all', filterParams.all || false)
+        queryParams.append('page', filterParams.page || 1)
+        queryParams.append('pageSize', filterParams.pageSize || 10)
 
-        const response = await authApi.get(`property/search?${queryParams.toString()}`)
+        const response = await authApi.get(`search/properties?${queryParams.toString()}`)
         if (response.status === 200) {
             return response.data
         }
@@ -40,25 +32,19 @@ export const searchProperties = async (filterParams) => {
 export const searchGuides = async (filterParams) => {
     try {
         // Convert filter params to query string for guides (camelCase)
+        // All parameters are mandatory for the filter to work properly
         const queryParams = new URLSearchParams()
         
-        if (filterParams.destination) {
-            queryParams.append('destination', filterParams.destination)
-        }
-        if (filterParams.fromDate) {
-            queryParams.append('fromDate', filterParams.fromDate)
-        }
-        if (filterParams.toDate) {
-            queryParams.append('toDate', filterParams.toDate)
-        }
-        if (filterParams.latitude) {
-            queryParams.append('latitude', filterParams.latitude)
-        }
-        if (filterParams.longitude) {
-            queryParams.append('longitude', filterParams.longitude)
-        }
+        queryParams.append('destination', filterParams.destination || '')
+        queryParams.append('fromDate', filterParams.fromDate || '')
+        queryParams.append('toDate', filterParams.toDate || '')
+        queryParams.append('latitude', filterParams.latitude || '')
+        queryParams.append('longitude', filterParams.longitude || '')
+        queryParams.append('all', filterParams.all || false)
+        queryParams.append('page', filterParams.page || 1)
+        queryParams.append('pageSize', filterParams.pageSize || 10)
 
-        const response = await authApi.get(`guide/search?${queryParams.toString()}`)
+        const response = await authApi.get(`search/guides?${queryParams.toString()}`)
         if (response.status === 200) {
             return response.data
         }
