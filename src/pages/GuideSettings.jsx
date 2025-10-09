@@ -89,11 +89,11 @@ export default function GuideSettings() {
     }
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden relative">
+        <div className="min-h-screen flex flex-col relative">
             {/* Reusable Animation Component */}
             <ScrollingRoadAnimation />
 
-            <header className="absolute top-0 left-0 right-0 z-10 bg-white/90 backdrop-blur-sm shadow-sm border-b border-[#D4B5A0] flex-shrink-0">
+            <header className="absolute top-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-sm shadow-sm border-b border-[#D4B5A0] flex-shrink-0">
                 <div className="max-w-6xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div
@@ -109,8 +109,8 @@ export default function GuideSettings() {
                 </div>
             </header>
 
-            <div className="absolute top-0 left-0 w-full h-full flex flex-col pt-24 z-1">
-                <div className="max-w-6xl mx-auto px-4 py-6 h-full flex flex-col">
+            <div className="flex-1 flex flex-col pt-24 z-1">
+                <div className="max-w-6xl mx-auto px-4 py-6 flex-1 flex flex-col">
                     <nav className="flex items-center space-x-2 text-sm text-[#8B4513] mb-4 flex-shrink-0">
                         <button
                             onClick={() => navigate("/home")}
@@ -120,27 +120,15 @@ export default function GuideSettings() {
                             Home
                         </button>
                         <ChevronRight className="h-4 w-4" />
-                        <button
-                            onClick={() => navigate("/traveller/settings")}
-                            className="hover:text-[#2D5016] transition-colors"
-                        >
-                            Account Settings
-                        </button>
-                        <ChevronRight className="h-4 w-4" />
-                        <span className="text-[#2D5016] font-medium">Guide Settings</span>
+                        <span className="text-[#2D5016] font-medium">Guide Dashboard</span>
                     </nav>
 
-                    <div className="mb-6 flex-shrink-0">
-                        <h1 className="text-3xl font-bold text-[#2D5016] mb-2">Guide Settings</h1>
-                        <p className="text-[#8B4513]">Manage your guide profile and preferences</p>
-                    </div>
 
-                    <div ref={containerRef} className="flex-1 overflow-hidden">
-                        <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full">
+                    <div ref={containerRef} className="flex-1 overflow-hidden min-h-[500px] max-h-[600px]">
+                        <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full min-h-[500px]">
                             <div className="grid grid-cols-12 gap-8 h-full">
                                 <aside className="col-span-12 lg:col-span-3">
-                                    <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] p-6">
-                                        <h3 className="text-lg font-semibold text-[#2D5016] mb-4">Guide Settings</h3>
+                                    <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] p-4">
                                         <TabsList className="flex lg:flex-col gap-2 bg-transparent w-full">
                                             <TabsTrigger
                                                 value="profile"
@@ -162,7 +150,7 @@ export default function GuideSettings() {
                                     </div>
                                 </aside>
 
-                                <section className="col-span-12 lg:col-span-9 h-full relative">
+                                <section className="col-span-12 lg:col-span-9 h-full relative min-h-[500px] max-h-[600px] overflow-y-auto">
                                     <div
                                         ref={activeTab === 'profile' ? tabContentRef : null}
                                         className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] h-full flex flex-col p-6 overflow-auto absolute inset-0 ${getAnimationClass('profile')}`}
@@ -175,6 +163,15 @@ export default function GuideSettings() {
                     </div>
                 </div>
             </div>
+            
+            {/* Footer */}
+            <footer className="bg-white/90 backdrop-blur-sm border-t border-[#D4B5A0] py-2 relative z-10">
+                <div className="max-w-7xl mx-auto px-4 text-center">
+                    <p className="text-xs text-gray-500">
+                        © 2024 HopInn. Copyright Protected. Developed by Vivek V S
+                    </p>
+                </div>
+            </footer>
         </div>
     );
 }

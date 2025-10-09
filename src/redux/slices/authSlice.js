@@ -24,11 +24,14 @@ export const fetchUserRoles = createAsyncThunk(
 const initialState = {
     user: {
         id: null,
+        name: null,
         isAdmin: false,
         isGuide: false,
         isGuideBlocked: null,
+        guideId: null,
         isHost: false,
         isHostBlocked: null,
+        hostId: null,
         isTraveller: true,
         isActive: false,
         isKycVerified: null
@@ -44,8 +47,8 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         setUser(state, action) {
-            const { id, isAdmin = false, isGuide = false,isGuideBlocked = null, isHost = false, isHostBlocked = null, isTraveller = true, isActive = false, isKycVerified = null } = action.payload || {};
-            state.user = { id, isAdmin, isGuide, isGuideBlocked, isHost, isHostBlocked, isTraveller, isActive, isKycVerified };
+            const { id, name = null, isAdmin = false, isGuide = false, isGuideBlocked = null, guideId = null, isHost = false, isHostBlocked = null, hostId = null, isTraveller = true, isActive = false, isKycVerified = null } = action.payload || {};
+            state.user = { id, name, isAdmin, isGuide, isGuideBlocked, guideId, isHost, isHostBlocked, hostId, isTraveller, isActive, isKycVerified };
             state.isAuthenticated = Boolean(id);
             state.blocked = !state.user.isActive
             console.log(state.user)

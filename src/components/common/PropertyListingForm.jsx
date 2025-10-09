@@ -388,6 +388,30 @@ export default function PropertyListingForm({
         {errors.pricePerNight && <span className="text-red-500 text-sm">{errors.pricePerNight.message}</span>}
       </div>
 
+      {/* Child-Friendly Option */}
+      <div>
+        <Label>Safety & Accessibility</Label>
+        <div className="flex items-center space-x-2 mt-2">
+          <Controller
+            name="childFriendly"
+            control={control}
+            render={({ field }) => (
+              <Checkbox
+                id="childFriendly"
+                checked={field.value || false}
+                onCheckedChange={field.onChange}
+              />
+            )}
+          />
+          <label htmlFor="childFriendly" className="text-sm font-medium leading-none">
+            Safe for Children
+          </label>
+        </div>
+        <p className="text-sm text-gray-500 mt-1">
+          Check this box if your property is safe and suitable for children
+        </p>
+      </div>
+
       {/* Amenities */}
       <div>
         <Label>Amenities</Label>

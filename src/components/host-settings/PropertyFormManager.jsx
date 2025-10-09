@@ -11,6 +11,7 @@ export const usePropertyForm = (editingProperty = null) => {
       maxGuests: 1,
       bedrooms: 1,
       pricePerNight: 1000,
+      childFriendly: false,
       amenities: [],
       propertyAddress: {
         houseName: '',
@@ -50,6 +51,7 @@ export const usePropertyForm = (editingProperty = null) => {
       maxGuests: property.maxGuests || 1,
       bedrooms: property.bedrooms || 1,
       pricePerNight: property.pricePerNight || 1000,
+      childFriendly: property.childFriendly || false,
       amenities: property.amenities || [],
       propertyAddress: {
         houseName: property.propertyAddress?.houseName || '',
