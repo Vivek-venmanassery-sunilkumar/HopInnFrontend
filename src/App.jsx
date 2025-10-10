@@ -9,6 +9,7 @@ import { store } from '@/redux/store'
 import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettings, AdminSettings, 
   RegistrationForm, GuideSettings, GuideProtectedRoute, HostProtectedRoute, HostSettings} from '@/routes'
 import PropertyDetails from './pages/PropertyDetails'
+import GuideDetails from './pages/GuideDetails'
 import NotFound from './components/common/NotFound'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
@@ -77,6 +78,14 @@ function App() {
               element={
                 <TravellerProtectedRoute>
                   <PropertyDetails />
+                </TravellerProtectedRoute>
+              }
+            />
+            <Route
+              path="/guide/:id"
+              element={
+                <TravellerProtectedRoute>
+                  <GuideDetails />
                 </TravellerProtectedRoute>
               }
             />

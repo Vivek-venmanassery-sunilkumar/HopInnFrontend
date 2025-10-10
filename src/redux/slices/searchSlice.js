@@ -47,6 +47,7 @@ const initialState = {
     },
     searchResults: {
         properties: [],
+        guides: [],
         totalCount: 0,
         page: 1,
         pageSize: 10,
@@ -75,9 +76,10 @@ const searchSlice = createSlice({
             saveToLocalStorage(newFilters);
         },
         setSearchResults(state, action) {
-            const { properties, totalCount, page, pageSize } = action.payload;
+            const { properties, guides, totalCount, page, pageSize } = action.payload;
             state.searchResults = {
-                properties,
+                properties: properties || [],
+                guides: guides || [],
                 totalCount,
                 page,
                 pageSize,
@@ -107,6 +109,7 @@ const searchSlice = createSlice({
             };
             state.searchResults = {
                 properties: [],
+                guides: [],
                 totalCount: 0,
                 page: 1,
                 pageSize: 10,

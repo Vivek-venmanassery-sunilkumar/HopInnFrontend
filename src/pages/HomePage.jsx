@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import HomePageFilter from '@/components/home-page/HomePageFilter'
 import PropertyCard from '@/components/home-page/PropertyCard'
+import GuideCard from '@/components/home-page/GuideCard'
 import PropertyMap from '@/components/home-page/PropertyMap'
 import { useSearchProperties, useSearchGuides } from '@/hooks/HomePageFilterHook'
 import { useState, useEffect } from 'react'
@@ -54,10 +55,10 @@ export default function HomePage() {
     )
     const { data: guidesData, isLoading: isGuidesLoading, error: guidesError } = useSearchGuides(
         searchParams, 
-        false // Disable guide search for now since the endpoint doesn't exist
+        true // Enable guide search
     )
     
-    const isSearching = isPropertiesLoading
+    const isSearching = isPropertiesLoading || isGuidesLoading
     const searchResults = {
         properties: propertiesData,
         guides: guidesData || []
@@ -314,26 +315,18 @@ export default function HomePage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                     {searchResults.guides?.guides?.length > 0 ? (
                                         searchResults.guides.guides.map((guide) => (
-                                            <div key={guide.id} className="bg-white rounded-lg shadow-md p-4">
-                                                <h3 className="text-lg font-semibold mb-2">{guide.name || 'Local Guide'}</h3>
-                                                <p className="text-gray-600 mb-2">{guide.bio || 'Professional local guide'}</p>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-gray-500">
-                                                        {guide.profession} • {guide.expertise}
-                                                    </span>
-                                                    <span className="text-lg font-bold text-primary">
-                                                        ${guide.hourly_rate}/hour
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            <GuideCard 
+                                                key={guide.id} 
+                                                guide={guide} 
+                                            />
                                         ))
                                     ) : (
                                         <div className="col-span-full text-center py-12">
                                             <div className="text-gray-500 text-lg">
-                                                Guide search is currently not available.
+                                                {isGuidesLoading ? 'Loading guides...' : 'No guides found'}
                                             </div>
                                             <div className="text-gray-400 text-sm mt-2">
-                                                Please check back later or search for properties instead.
+                                                {isGuidesLoading ? 'Please wait while we fetch guides for you.' : 'Try adjusting your search criteria or check back later.'}
                                             </div>
                                         </div>
                                     )}

@@ -37,3 +37,15 @@ export const updateGuideProfile = async(data)=>{
         throw new Error(serverMessage || error.message)
     }
 }
+
+export const fetchGuideById = async(guideId) => {
+    try{
+        const response = await authApi.get(`/search/guide/${guideId}`);
+        if(response.status === 200){
+            return response.data
+        }
+    }catch(error){
+        const serverMessage = error.response?.data?.detail?.message;
+        throw new Error(serverMessage || error.message)
+    }
+}
