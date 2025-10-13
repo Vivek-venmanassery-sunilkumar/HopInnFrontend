@@ -9,7 +9,7 @@ import PropertyMap from '@/components/home-page/PropertyMap'
 import { useSearchProperties, useSearchGuides } from '@/hooks/HomePageFilterHook'
 import { useState, useEffect } from 'react'
 import { ChevronDown, User, Home, MapPin, Settings, LogOut, Plus, Shield } from 'lucide-react'
-import { fetchUserRoles, logout } from '@/redux/slices/authSlice'
+import { fetchUserRoles, logoutUser } from '@/redux/slices/authSlice'
 import { setSearchFilters, setSearchResults, setSearchLoading, setSearchError, clearSearch, loadFiltersFromStorage } from '@/redux/slices/searchSlice'
 
 export default function HomePage() {
@@ -231,7 +231,7 @@ export default function HomePage() {
                                             {/* Logout */}
                                             <button
                                                 onClick={() => {
-                                                    dispatch(logout())
+                                                    dispatch(logoutUser())
                                                     navigate("/login")
                                                     setShowUserMenu(false)
                                                 }}

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi } from '@/axios/auth.axios'; 
+import { authApi } from '@/axios/auth.axios';
+import { clearSearch } from './searchSlice'; 
 
 
 export const fetchUserRoles = createAsyncThunk(
@@ -17,6 +18,23 @@ export const fetchUserRoles = createAsyncThunk(
             }
             console.log('thunk failed', error)
             return rejectWithValue(error.response?.data || "Failed to fetch user roles")
+        }
+    }
+)
+
+export const logoutUser = createAsyncThunk(
+    'auth/logoutUser',
+    async(_, {dispatch})=>{
+        try{
+            // Clear search filters from localStorage
+            dispatch(clearSearch());
+            
+            // Return success to trigger the logout reducer
+            return { success: true };
+        }catch(error){
+            console.error('Error during logout:', error);
+            // Even if there's an error, we still want to logout
+            return { success: true };
         }
     }
 )
@@ -73,6 +91,14 @@ const authSlice = createSlice({
         .addCase(fetchUserRoles.rejected, (state,action)=>{
             state.isLoading=false;
             state.error = action.payload;
+        })
+        .addCase(logoutUser.fulfilled, (state)=>{
+            // Reset user state to initial values
+            state.user = { ...initialState.user };
+            state.isAuthenticated = false;
+            state.blocked = false;
+            state.isLoading = false;
+            state.error = null;
         });
     }
 });
