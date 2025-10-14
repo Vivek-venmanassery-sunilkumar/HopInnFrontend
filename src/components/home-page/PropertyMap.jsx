@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const PropertyMap = ({ properties = [] }) => {
+const PropertyMap = ({ properties = [], guides = [] }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -45,9 +45,10 @@ const PropertyMap = ({ properties = [] }) => {
   }, []);
 
   useEffect(() => {
-    if (!map.current || !mapLoaded || properties.length === 0) return;
+    if (!map.current || !mapLoaded || (properties.length === 0 && guides.length === 0)) return;
 
     console.log('Adding markers for properties:', properties);
+    console.log('Adding markers for guides:', guides);
 
     // Clear existing markers
     const markers = document.querySelectorAll('.mapboxgl-marker');
@@ -67,7 +68,7 @@ const PropertyMap = ({ properties = [] }) => {
       });
       
       if (property.latitude && property.longitude) {
-        // Create a custom marker element
+        // Create a custom marker element for properties
         const markerElement = document.createElement('div');
         markerElement.className = 'property-marker';
         markerElement.style.cssText = `
@@ -85,7 +86,7 @@ const PropertyMap = ({ properties = [] }) => {
           font-size: 12px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         `;
-        markerElement.textContent = index + 1;
+        markerElement.textContent = 'P';
 
         // Create popup content with proper fallbacks
         const getLocationString = (property) => {
@@ -116,19 +117,82 @@ const PropertyMap = ({ properties = [] }) => {
       }
     });
 
-    // Fit map to show all properties
-    if (properties.length > 0) {
-      const coordinates = properties
-        .filter(property => property.latitude && property.longitude)
-        .map(property => [property.longitude, property.latitude]);
+    // Add markers for each guide
+    guides.forEach((guide, index) => {
+      console.log(`Guide ${index + 1}:`, {
+        name: `${guide.firstName} ${guide.lastName}`,
+        district: guide.district,
+        state: guide.state,
+        country: guide.country,
+        hourlyRate: guide.hourlyRate,
+        lat: guide.latitude,
+        lng: guide.longitude
+      });
+      
+      if (guide.latitude && guide.longitude) {
+        // Create a custom marker element for guides
+        const markerElement = document.createElement('div');
+        markerElement.className = 'guide-marker';
+        markerElement.style.cssText = `
+          width: 30px;
+          height: 30px;
+          background-color: #2D5016;
+          border: 2px solid white;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 12px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        `;
+        markerElement.textContent = 'G';
+
+        // Create popup content for guides
+        const getLocationString = (guide) => {
+          const parts = [];
+          
+          if (guide.district) parts.push(guide.district);
+          if (guide.state) parts.push(guide.state);
+          if (guide.country && guide.country !== 'India') parts.push(guide.country);
+          
+          return parts.length > 0 ? parts.join(', ') : 'Location not specified';
+        };
+        
+        const location = getLocationString(guide);
+        
+        const popupContent = `
+          <div style="padding: 8px; max-width: 200px;">
+            <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold;">${guide.firstName || ''} ${guide.lastName || ''}</h3>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${location}</p>
+            <p style="margin: 0; font-size: 12px; color: #2D5016; font-weight: bold;">₹${guide.hourlyRate || 'N/A'}/hour</p>
+          </div>
+        `;
+
+        // Add marker to map
+        new mapboxgl.Marker(markerElement)
+          .setLngLat([guide.longitude, guide.latitude])
+          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
+          .addTo(map.current);
+      }
+    });
+
+    // Fit map to show all properties and guides
+    const allItems = [...properties, ...guides];
+    if (allItems.length > 0) {
+      const coordinates = allItems
+        .filter(item => item.latitude && item.longitude)
+        .map(item => [item.longitude, item.latitude]);
 
       if (coordinates.length > 0) {
         if (coordinates.length === 1) {
-          // For single property, center on it with appropriate zoom
+          // For single item, center on it with appropriate zoom
           map.current.setCenter(coordinates[0]);
           map.current.setZoom(14);
         } else {
-          // For multiple properties, fit bounds
+          // For multiple items, fit bounds
           const bounds = coordinates.reduce((bounds, coord) => {
             return bounds.extend(coord);
           }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
@@ -140,7 +204,7 @@ const PropertyMap = ({ properties = [] }) => {
         }
       }
     }
-  }, [properties, mapLoaded]);
+  }, [properties, guides, mapLoaded]);
 
   if (!import.meta.env.VITE_MAPBOX_ACCESS_TOKEN) {
     return (

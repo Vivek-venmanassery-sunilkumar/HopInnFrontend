@@ -24,6 +24,7 @@ const HomePageFilter = ({ onFilter, onClear, isLoading = false, initialValues = 
   const [activeFilter, setActiveFilter] = useState(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showGuestsPicker, setShowGuestsPicker] = useState(false)
+  const [currentDateField, setCurrentDateField] = useState('checkin') // 'checkin' or 'checkout'
   const [guestCount, setGuestCount] = useState(initialValues.guests || 1)
   const [adultCount, setAdultCount] = useState(initialValues.adultCount || 1)
   const [childrenCount, setChildrenCount] = useState(initialValues.childrenCount || 0)
@@ -198,6 +199,15 @@ const HomePageFilter = ({ onFilter, onClear, isLoading = false, initialValues = 
   const handleDateChange = (checkIn, checkOut) => {
     setValue('fromDate', checkIn)
     setValue('toDate', checkOut)
+    
+    // Update current field based on what's being selected
+    if (!checkIn && !checkOut) {
+      setCurrentDateField('checkin') // No dates selected, start with check-in
+    } else if (checkIn && !checkOut) {
+      setCurrentDateField('checkout') // Check-in selected, now selecting check-out
+    } else if (checkIn && checkOut) {
+      setCurrentDateField('checkout') // Both selected, keep focus on check-out for modifications
+    }
   }
 
 
@@ -294,6 +304,7 @@ const HomePageFilter = ({ onFilter, onClear, isLoading = false, initialValues = 
     setActiveFilter(null)
     setShowDatePicker(false)
     setShowGuestsPicker(false)
+    setCurrentDateField('checkin')
     onClear()
   }
 
@@ -322,7 +333,7 @@ const HomePageFilter = ({ onFilter, onClear, isLoading = false, initialValues = 
           
           {/* Destination Suggestions */}
           {activeFilter === 'where' && showSuggestions && destinationSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-3 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
+            <div ref={suggestionsRef} className="absolute top-full left-0 right-0 mt-3 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
               <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200/50 max-h-64 overflow-y-auto">
                 <div className="p-2">
                   {destinationSuggestions.map((suggestion, index) => (
@@ -364,10 +375,21 @@ const HomePageFilter = ({ onFilter, onClear, isLoading = false, initialValues = 
         <div className="relative">
           <button
             type="button"
-            onClick={() => handleFilterClick('dates')}
+            onClick={() => {
+              handleFilterClick('dates')
+              // If both dates are selected and user clicks check-in, clear check-out and focus on check-in
+              if (fromDateValue && toDateValue) {
+                setValue('toDate', '')
+                setCurrentDateField('checkin')
+              } else {
+                setCurrentDateField('checkin')
+              }
+            }}
             className={`px-4 py-2 text-left rounded-full transition-all duration-300 ease-in-out ${
-              activeFilter === 'dates' 
-                ? 'bg-gray-100' 
+              activeFilter === 'dates' && currentDateField === 'checkin'
+                ? 'bg-gray-100 ring-2 ring-blue-500' 
+                : activeFilter === 'dates'
+                ? 'bg-gray-50'
                 : 'hover:bg-gray-50'
             }`}
           >
@@ -385,10 +407,23 @@ const HomePageFilter = ({ onFilter, onClear, isLoading = false, initialValues = 
         <div className="relative">
           <button
             type="button"
-            onClick={() => handleFilterClick('dates')}
+            onClick={() => {
+              handleFilterClick('dates')
+              // If both dates are selected and user clicks check-out, keep check-in and focus on check-out
+              if (fromDateValue && toDateValue) {
+                setCurrentDateField('checkout')
+              } else if (fromDateValue && !toDateValue) {
+                setCurrentDateField('checkout')
+              } else {
+                // If no check-in date, start with check-in first
+                setCurrentDateField('checkin')
+              }
+            }}
             className={`px-4 py-2 text-left rounded-full transition-all duration-300 ease-in-out ${
-              activeFilter === 'dates' 
-                ? 'bg-gray-100' 
+              activeFilter === 'dates' && currentDateField === 'checkout'
+                ? 'bg-gray-100 ring-2 ring-blue-500' 
+                : activeFilter === 'dates'
+                ? 'bg-gray-50'
                 : 'hover:bg-gray-50'
             }`}
           >
@@ -451,16 +486,20 @@ const HomePageFilter = ({ onFilter, onClear, isLoading = false, initialValues = 
       {/* Date Picker Modal */}
       {showDatePicker && (
         <div className="absolute top-full left-0 right-0 mt-2 z-50 animate-in slide-in-from-top-2 fade-in duration-300">
-          <DatePicker
-            onDateSelect={handleDateSelect}
-            onDateChange={handleDateChange}
-            onClose={() => {
-              setShowDatePicker(false)
-              setActiveFilter(null)
-            }}
-            initialCheckIn={fromDateValue}
-            initialCheckOut={toDateValue}
-          />
+          <div className="w-full max-w-4xl mx-auto px-4 sm:px-0">
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 sm:p-6">
+              <DatePicker
+                onDateSelect={handleDateSelect}
+                onDateChange={handleDateChange}
+                onClose={() => {
+                  setShowDatePicker(false)
+                  setActiveFilter(null)
+                }}
+                initialCheckIn={fromDateValue}
+                initialCheckOut={toDateValue}
+              />
+            </div>
+          </div>
         </div>
       )}
 

@@ -128,7 +128,7 @@ const DatePicker = ({ onDateSelect, onClose, initialCheckIn, initialCheckOut, on
   const nextMonthData = generateCalendarData(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 w-[800px]">
+    <div className="w-full">
       {/* Header */}
       <div className="flex items-center justify-end mb-6">
         <button

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import HotelFillingLoader from '@/components/ui/HotelFillingLoader'
 import NotFound from '@/components/common/NotFound'
 import PropertyMap from '@/components/home-page/PropertyMap'
+import PropertyBookingForm from '@/components/booking/PropertyBookingForm'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
@@ -13,12 +14,23 @@ export default function PropertyDetails() {
     const navigate = useNavigate()
     const { data: propertyData, isLoading, error } = useGetPropertyById(id)
     const user = useSelector(state => state.auth.user)
-    const [selectedDates, setSelectedDates] = useState({
-        checkIn: '',
-        checkOut: ''
-    })
-    const [guests, setGuests] = useState(1)
-    const [showBookingForm, setShowBookingForm] = useState(false)
+    const [isBookingLoading, setIsBookingLoading] = useState(false)
+
+    const handleBookingSubmit = async (bookingData) => {
+        setIsBookingLoading(true)
+        try {
+            // TODO: Implement booking submission logic
+            console.log('Booking data:', bookingData)
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            alert('Booking request sent successfully!')
+        } catch (error) {
+            console.error('Booking error:', error)
+            alert('Failed to send booking request. Please try again.')
+        } finally {
+            setIsBookingLoading(false)
+        }
+    }
 
     if (isLoading) {
         return (
@@ -310,99 +322,11 @@ export default function PropertyDetails() {
                     {!isHost && (
                         <div className="lg:col-span-1">
                             <div className="sticky top-8">
-                                <div className="bg-white rounded-xl shadow-lg border p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <IndianRupee className="h-6 w-6 text-[#F68241]" />
-                                                <span className="text-3xl font-bold text-gray-900">
-                                                    {property.pricePerNight}
-                                                </span>
-                                            </div>
-                                            <span className="text-gray-600">per night</span>
-                                        </div>
-                                    </div>
-
-                                    {!showBookingForm ? (
-                                        <Button 
-                                            onClick={() => setShowBookingForm(true)}
-                                            className="w-full bg-gradient-to-r from-[#F68241] to-[#F3CA62] hover:from-[#E67332] hover:to-[#E4BA52] text-white py-3 text-lg font-semibold"
-                                        >
-                                            <Calendar className="h-5 w-5 mr-2" />
-                                            Select Dates
-                                        </Button>
-                                    ) : (
-                                        <div className="space-y-4 mb-6">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-lg font-semibold text-gray-900">Select Dates</h3>
-                                                <Button 
-                                                    onClick={() => setShowBookingForm(false)}
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-gray-500 hover:text-gray-700"
-                                                >
-                                                    Cancel
-                                                </Button>
-                                            </div>
-                                            
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                        Check-in
-                                                    </label>
-                                                    <input 
-                                                        type="date" 
-                                                        value={selectedDates.checkIn}
-                                                        onChange={(e) => setSelectedDates(prev => ({ ...prev, checkIn: e.target.value }))}
-                                                        min={new Date().toISOString().split('T')[0]}
-                                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F68241] focus:border-transparent"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                        Check-out
-                                                    </label>
-                                                    <input 
-                                                        type="date" 
-                                                        value={selectedDates.checkOut}
-                                                        onChange={(e) => setSelectedDates(prev => ({ ...prev, checkOut: e.target.value }))}
-                                                        min={selectedDates.checkIn || new Date().toISOString().split('T')[0]}
-                                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F68241] focus:border-transparent"
-                                                    />
-                                                </div>
-                                            </div>
-                                            
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Guests
-                                                </label>
-                                                <select 
-                                                    value={guests}
-                                                    onChange={(e) => setGuests(parseInt(e.target.value))}
-                                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F68241] focus:border-transparent"
-                                                >
-                                                    {Array.from({ length: property.maxGuests }, (_, i) => (
-                                                        <option key={i + 1} value={i + 1}>
-                                                            {i + 1} {i === 0 ? 'guest' : 'guests'}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            <Button 
-                                                className="w-full bg-gradient-to-r from-[#F68241] to-[#F3CA62] hover:from-[#E67332] hover:to-[#E4BA52] text-white py-3 text-lg font-semibold"
-                                                disabled={!selectedDates.checkIn || !selectedDates.checkOut}
-                                            >
-                                                <Send className="h-5 w-5 mr-2" />
-                                                Send Booking Request
-                                            </Button>
-                                        </div>
-                                    )}
-
-                                    <p className="text-center text-sm text-gray-500 mt-4">
-                                        You won't be charged yet
-                                    </p>
-                                </div>
+                                <PropertyBookingForm
+                                    property={property}
+                                    onBookingSubmit={handleBookingSubmit}
+                                    isLoading={isBookingLoading}
+                                />
                             </div>
                         </div>
                     )}
