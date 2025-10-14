@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { useHostOnboard } from '@/hooks/HostHooks';
 import { useDispatch } from 'react-redux';
-import { fetchUserRoles } from '@/redux/slices/authSlice';
 import { uploadToCloudinary } from '@/lib/cloudinaryUtils';
 import HostFormFields from '../common/HostFormFields';
 import PropertyListingForm from '../common/PropertyListingForm';
@@ -64,7 +63,6 @@ export default function HostRegistrationForm() {
       console.log('Host Registration:', data);
       const response = await onboardHost(data, {
         onSuccess: async () => {
-          await dispatch(fetchUserRoles()).unwrap();
           navigate('/host-settings');
         }
       });

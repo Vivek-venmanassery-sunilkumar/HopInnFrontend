@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { addProperty, getPropertiesHost, editPropertyDetails } from "@/services/PropertyService"
+import { addProperty, getPropertiesHost, editPropertyDetails, getPropertyById } from "@/services/PropertyService"
 import toast from "react-hot-toast"
 
 
@@ -36,6 +36,16 @@ export function useUpdatePropertyDetails(){
             const message = error.message || 'Failed to update property details'
             toast.error(message)
         }
+    })
+}
+
+export function useGetPropertyById(propertyId, enabled = true) {
+    return useQuery({
+        queryKey: ["property", propertyId],
+        queryFn: () => getPropertyById(propertyId),
+        enabled: enabled && !!propertyId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        retry: 1
     })
 }
 

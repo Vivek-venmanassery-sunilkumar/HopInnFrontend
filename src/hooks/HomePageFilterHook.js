@@ -8,7 +8,7 @@ export function useSearchProperties(filterParams, enabled = false){
     return useQuery({
         queryKey: ["searchProperties", filterParams],
         queryFn: () => searchProperties(filterParams),
-        enabled: enabled && !!(filterParams?.destination || filterParams?.fromDate || filterParams?.toDate),
+        enabled: enabled && (!!(filterParams?.destination || filterParams?.fromDate || filterParams?.toDate) || filterParams?.all === true),
         staleTime: 5 * 60 * 1000, // 5 minutes
         onSuccess: (data) => {
             const message = data?.message || 'Properties found successfully'
@@ -25,7 +25,7 @@ export function useSearchGuides(filterParams, enabled = false){
     return useQuery({
         queryKey: ["searchGuides", filterParams],
         queryFn: () => searchGuides(filterParams),
-        enabled: enabled && !!(filterParams?.destination || filterParams?.fromDate || filterParams?.toDate),
+        enabled: enabled && (!!(filterParams?.destination || filterParams?.fromDate || filterParams?.toDate) || filterParams?.all === true),
         staleTime: 5 * 60 * 1000, // 5 minutes
         onSuccess: (data) => {
             const message = data?.message || 'Guides found successfully'

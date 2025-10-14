@@ -47,11 +47,11 @@ export default function TravellerSettings() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden relative">
+    <div className="min-h-screen flex flex-col relative">
       {/* Reusable Animation Component */}
       <ScrollingRoadAnimation />
 
-      <header className="absolute top-0 left-0 right-0 z-10 bg-white/90 backdrop-blur-sm shadow-sm border-b border-[#D4B5A0] flex-shrink-0">
+      <header className="absolute top-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-sm shadow-sm border-b border-[#D4B5A0] flex-shrink-0">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div
@@ -61,55 +61,14 @@ export default function TravellerSettings() {
               <img src={HikerLogo || "/placeholder.svg"} alt="Hiker Logo" className="h-8 w-8" />
               <span className="text-xl font-bold text-[#2D5016]">HopInn</span>
             </div>
-            <div className="flex gap-3">
-              {!user.isGuide && (
-                <Button
-                  onClick={() => {
-                    dispatch(fetchUserRoles())
-                    navigate("/registration?type=guide")
-                  }}
-                  className="bg-[#2D5016] hover:bg-[#1F3A0F] text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Become a Guide
-                </Button>
-              )}
-              {user.isGuide && (
-                <Button
-                  onClick={() => navigate("/guide-settings")}
-                  variant="outline"
-                  className="border-[#2D5016] text-[#2D5016] hover:bg-[#2D5016]/10 px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Guide Settings
-                </Button>
-              )}
-              {!user.isHost && (
-                <Button
-                  onClick={() => {
-                    dispatch(fetchUserRoles())
-                    navigate("/registration?type=host")
-                  }}
-                  className="bg-[#F68241] hover:bg-[#E5732A] text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Become a Host
-                </Button>
-              )}
-              {user.isHost && (
-                <Button
-                  onClick={() => navigate("/host-settings")}
-                  variant="outline"
-                  className="border-[#F68241] text-[#F68241] hover:bg-[#F68241]/10 px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Host Settings
-                </Button>
-              )}
-            </div>
+            {/* Navigation buttons removed - now accessible from HomePage user menu */}
           </div>
         </div>
       </header>
 
-      <div className="absolute top-0 left-0 w-full h-full flex flex-col pt-24 z-1">
-        <div className="max-w-6xl mx-auto px-4 py-6 h-full flex flex-col">
-          <nav className="flex items-center space-x-2 text-sm text-[#8B4513] mb-4 flex-shrink-0">
+      <div className="flex-1 flex flex-col pt-24 z-1">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex-1 flex flex-col">
+          <nav className="flex items-center space-x-2 text-sm text-[#8B4513] mb-2 flex-shrink-0">
             <button
               onClick={() => navigate("/home")}
               className="flex items-center gap-1 hover:text-[#2D5016] transition-colors"
@@ -121,17 +80,11 @@ export default function TravellerSettings() {
             <span className="text-[#2D5016] font-medium">Account Settings</span>
           </nav>
 
-          <div className="mb-6 flex-shrink-0">
-            <h1 className="text-3xl font-bold text-[#2D5016] mb-2">Account Settings</h1>
-            <p className="text-[#8B4513]">Manage your profile, wallet, and verification settings</p>
-          </div>
-
-          <div ref={containerRef} className="flex-1 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full">
+          <div ref={containerRef} className="flex-1 overflow-hidden min-h-[500px] max-h-[600px]">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full min-h-[500px]">
               <div className="grid grid-cols-12 gap-8 h-full">
                 <aside className="col-span-12 lg:col-span-3">
-                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] p-6">
-                    <h3 className="text-lg font-semibold text-[#2D5016] mb-4">Settings Menu</h3>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] p-4">
                     <TabsList className="flex lg:flex-col gap-2 bg-transparent w-full">
                       <TabsTrigger
                         value="profile"
@@ -184,7 +137,7 @@ export default function TravellerSettings() {
                     </TabsList>
                   </div>
                 </aside>
-                <section className="col-span-12 lg:col-span-9 h-full relative">
+                <section className="col-span-12 lg:col-span-9 h-full relative min-h-[500px] max-h-[600px] overflow-y-auto">
                   <div
                     ref={activeTab === "profile" ? tabContentRef : null}
                     className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] h-full flex flex-col p-6 overflow-auto absolute inset-0 ${getAnimationClass("profile")}`}
@@ -209,6 +162,15 @@ export default function TravellerSettings() {
           </div>
         </div>
       </div>
+      
+      {/* Footer */}
+      <footer className="bg-white/90 backdrop-blur-sm border-t border-[#D4B5A0] py-2 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-xs text-gray-500">
+            © 2024 HopInn. Copyright Protected. Developed by Vivek V S
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

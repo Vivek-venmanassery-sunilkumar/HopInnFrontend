@@ -100,6 +100,7 @@ export default function PropertyManagementTab() {
           bedrooms: parseInt(transformedData.bedrooms) || 1,
           maxGuests: parseInt(transformedData.maxGuests) || 1,
           pricePerNight: parseFloat(transformedData.pricePerNight) || 1000,
+          childFriendly: transformedData.childFriendly || false,
           propertyAddress: {
             coordinates: {
               latitude: typeof transformedData.propertyAddress.coordinates.latitude === 'string' 
@@ -140,6 +141,7 @@ export default function PropertyManagementTab() {
           bedrooms: parseInt(transformedData.bedrooms) || 1,
           maxGuests: parseInt(transformedData.maxGuests) || 1,
           pricePerNight: parseFloat(transformedData.pricePerNight) || 1000,
+          childFriendly: transformedData.childFriendly || false,
           propertyAddress: {
             coordinates: {
               latitude: typeof transformedData.propertyAddress.coordinates.latitude === 'string'

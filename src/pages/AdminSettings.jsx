@@ -39,11 +39,11 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden relative">
+    <div className="min-h-screen flex flex-col relative">
       {/* Reusable Animation Component */}
       <ScrollingRoadAnimation />
 
-      <header className="absolute top-0 left-0 right-0 z-10 bg-white/90 backdrop-blur-sm shadow-sm border-b border-[#D4B5A0] flex-shrink-0">
+      <header className="absolute top-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-sm shadow-sm border-b border-[#D4B5A0] flex-shrink-0">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div
@@ -68,8 +68,8 @@ export default function AdminSettings() {
         </div>
       </header>
 
-      <div className="absolute top-0 left-0 w-full h-full flex flex-col pt-24 z-1">
-        <div className="max-w-6xl mx-auto px-4 py-6 h-full flex flex-col">
+      <div className="flex-1 flex flex-col pt-24 z-1">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex-1 flex flex-col">
           <nav className="flex items-center space-x-2 text-sm text-[#8B4513] mb-4 flex-shrink-0">
             <button
               onClick={() => navigate("/home")}
@@ -82,35 +82,11 @@ export default function AdminSettings() {
             <span className="text-[#2D5016] font-medium">Admin Dashboard</span>
           </nav>
 
-          <div className="mb-6 flex-shrink-0">
-            <h1 className="text-3xl font-bold text-[#2D5016] mb-2 flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-[#F68241] to-[#F3CA62] rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </div>
-              Admin Dashboard
-            </h1>
-            <p className="text-[#8B4513]">Manage platform operations, user verification, and system settings</p>
-          </div>
-
-          <div ref={containerRef} className="flex-1 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full">
+          <div ref={containerRef} className="flex-1 overflow-hidden min-h-[500px] max-h-[600px]">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full min-h-[500px]">
               <div className="grid grid-cols-12 gap-8 h-full">
                 <aside className="col-span-12 lg:col-span-3">
-                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] p-6">
-                    <h3 className="text-lg font-semibold text-[#2D5016] mb-4">Admin Menu</h3>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] p-4">
                     <TabsList className="flex lg:flex-col gap-2 bg-transparent w-full">
                       <TabsTrigger
                         value="kyc"
@@ -163,7 +139,7 @@ export default function AdminSettings() {
                     </TabsList>
                   </div>
                 </aside>
-                <section className="col-span-12 lg:col-span-9 h-full relative">
+                <section className="col-span-12 lg:col-span-9 h-full relative min-h-[500px] max-h-[600px] overflow-y-auto">
                   <div
                     ref={activeTab === "kyc" ? tabContentRef : null}
                     className={`bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] h-full flex flex-col p-6 overflow-auto absolute inset-0 ${getAnimationClass("kyc")}`}
@@ -209,6 +185,15 @@ export default function AdminSettings() {
           </div>
         </div>
       </div>
+      
+      {/* Footer */}
+      <footer className="bg-white/90 backdrop-blur-sm border-t border-[#D4B5A0] py-2 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-xs text-gray-500">
+            © 2024 HopInn. Copyright Protected. Developed by Vivek V S
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

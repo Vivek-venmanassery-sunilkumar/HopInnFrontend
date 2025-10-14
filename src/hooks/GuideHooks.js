@@ -1,4 +1,4 @@
-import { guideOnBoard, fetchGuideProfile, updateGuideProfile } from "@/services/GuideService";
+import { guideOnBoard, fetchGuideProfile, updateGuideProfile, fetchGuideById } from "@/services/GuideService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -41,5 +41,14 @@ export function useUpdateGuideProfile(){
             console.log(message)
             toast.error(message)
         }
+    })
+}
+
+export function useGetGuideById(guideId, enabled = true) {
+    return useQuery({
+        queryKey: ['guide', guideId],
+        queryFn: () => fetchGuideById(guideId),
+        enabled: enabled && !!guideId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
     })
 }

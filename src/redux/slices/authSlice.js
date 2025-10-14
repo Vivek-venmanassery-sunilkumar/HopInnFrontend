@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi } from '@/axios/auth.axios'; 
+import { authApi } from '@/axios/auth.axios';
+import { clearSearch } from './searchSlice'; 
 
 
 export const fetchUserRoles = createAsyncThunk(
@@ -21,14 +22,34 @@ export const fetchUserRoles = createAsyncThunk(
     }
 )
 
+export const logoutUser = createAsyncThunk(
+    'auth/logoutUser',
+    async(_, {dispatch})=>{
+        try{
+            // Clear search filters from localStorage
+            dispatch(clearSearch());
+            
+            // Return success to trigger the logout reducer
+            return { success: true };
+        }catch(error){
+            console.error('Error during logout:', error);
+            // Even if there's an error, we still want to logout
+            return { success: true };
+        }
+    }
+)
+
 const initialState = {
     user: {
         id: null,
+        name: null,
         isAdmin: false,
         isGuide: false,
         isGuideBlocked: null,
+        guideId: null,
         isHost: false,
         isHostBlocked: null,
+        hostId: null,
         isTraveller: true,
         isActive: false,
         isKycVerified: null
@@ -44,8 +65,8 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         setUser(state, action) {
-            const { id, isAdmin = false, isGuide = false,isGuideBlocked = null, isHost = false, isHostBlocked = null, isTraveller = true, isActive = false, isKycVerified = null } = action.payload || {};
-            state.user = { id, isAdmin, isGuide, isGuideBlocked, isHost, isHostBlocked, isTraveller, isActive, isKycVerified };
+            const { id, name = null, isAdmin = false, isGuide = false, isGuideBlocked = null, guideId = null, isHost = false, isHostBlocked = null, hostId = null, isTraveller = true, isActive = false, isKycVerified = null } = action.payload || {};
+            state.user = { id, name, isAdmin, isGuide, isGuideBlocked, guideId, isHost, isHostBlocked, hostId, isTraveller, isActive, isKycVerified };
             state.isAuthenticated = Boolean(id);
             state.blocked = !state.user.isActive
             console.log(state.user)
@@ -70,6 +91,14 @@ const authSlice = createSlice({
         .addCase(fetchUserRoles.rejected, (state,action)=>{
             state.isLoading=false;
             state.error = action.payload;
+        })
+        .addCase(logoutUser.fulfilled, (state)=>{
+            // Reset user state to initial values
+            state.user = { ...initialState.user };
+            state.isAuthenticated = false;
+            state.blocked = false;
+            state.isLoading = false;
+            state.error = null;
         });
     }
 });

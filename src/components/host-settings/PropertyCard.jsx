@@ -1,10 +1,12 @@
 // components/host-settings/PropertyCard.jsx
 import { useState } from 'react';
-import { Edit, MapPin, Users, Bed, IndianRupee, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Edit, MapPin, Users, Bed, IndianRupee, Star, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function PropertyCard({ property, onEdit }) {
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
   
   // Get primary image (first image for now due to multiple primary images issue)
   const primaryImage = property.propertyImages?.[0]?.imageUrl || '';
@@ -14,11 +16,21 @@ export default function PropertyCard({ property, onEdit }) {
     `${property.propertyAddress.district}, ${property.propertyAddress.state}` : 
     'Location not specified';
 
+  // Handle card click to navigate to property details
+  const handleCardClick = (e) => {
+    // Prevent navigation if clicking on buttons
+    if (e.target.closest('button')) {
+      return;
+    }
+    navigate(`/property/${property.property_id}`);
+  };
+
   return (
     <div 
-      className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] overflow-hidden hover:shadow-xl transition-all duration-300 w-full"
+      className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-[#D4B5A0] overflow-hidden hover:shadow-xl transition-all duration-300 w-full cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       <div className="flex flex-row h-48">
         {/* Property Details - Left Side */}
@@ -98,7 +110,10 @@ export default function PropertyCard({ property, onEdit }) {
 
             {/* Edit Button */}
             <Button
-              onClick={() => onEdit(property)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(property);
+              }}
               className="bg-gradient-to-r from-[#F68241] to-[#F3CA62] hover:from-[#E67332] hover:to-[#E4BA52] text-white ml-4"
               size="sm"
             >
@@ -125,15 +140,32 @@ export default function PropertyCard({ property, onEdit }) {
           {/* Hover overlay with quick actions */}
           {isHovered && (
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center transition-opacity">
-              <div className="text-white text-center">
-                <Button
-                  onClick={() => onEdit(property)}
-                  className="bg-white text-[#F68241] hover:bg-gray-100 mb-2"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Quick Edit
-                </Button>
-                <p className="text-sm mt-2">Click anywhere to view details</p>
+              <div className="text-white text-center space-y-2">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/property/${property.property_id}`);
+                    }}
+                    className="bg-white text-[#F68241] hover:bg-gray-100"
+                    size="sm"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Details
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(property);
+                    }}
+                    className="bg-white text-[#F68241] hover:bg-gray-100"
+                    size="sm"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Quick Edit
+                  </Button>
+                </div>
+                <p className="text-sm">Click anywhere to view details</p>
               </div>
             </div>
           )}

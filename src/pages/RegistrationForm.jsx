@@ -57,13 +57,6 @@ export default function RegistrationForm({ defaultType = "guide" }) {
               Home
             </button>
             <ChevronRight className="h-4 w-4" />
-            <button
-              onClick={() => navigate("/traveller/settings")}
-              className="hover:text-[#2D5016] transition-colors"
-            >
-              Account Settings
-            </button>
-            <ChevronRight className="h-4 w-4" />
             <span className="text-[#2D5016] font-medium">
               {type === "guide" ? "Guide Registration" : "Host Registration"}
             </span>
@@ -147,6 +140,15 @@ export default function RegistrationForm({ defaultType = "guide" }) {
           </div>
         </div>
       </div>
+      
+      {/* Footer */}
+      <footer className="bg-white/90 backdrop-blur-sm border-t border-[#D4B5A0] py-3 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-sm text-gray-600">
+            © 2024 HopInn. Copyright Protected. Developed by Vivek V S
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -67,8 +67,9 @@ export default function Authentication() {
         }
     }, [location.search]);
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-            <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl shadow-2xl border border-gray-100 bg-white/90">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl shadow-2xl border border-gray-100 bg-white/90">
                 {/* Background travel icons */}
                 <PlaneIcon className="pointer-events-none absolute -top-6 -left-6 text-gray-200" size={96} />
                 <TrainIcon className="pointer-events-none absolute top-10 right-6 text-gray-200" size={88} />
@@ -121,6 +122,16 @@ export default function Authentication() {
                     </div>
                 </div>
             </div>
+            </div>
+            
+            {/* Footer */}
+            <footer className="bg-white/90 backdrop-blur-sm border-t border-[#D4B5A0] py-2 w-full">
+                <div className="max-w-7xl mx-auto px-4 text-center">
+                    <p className="text-xs text-gray-500">
+                        © 2024 HopInn. Copyright Protected. Developed by Vivek V S
+                    </p>
+                </div>
+            </footer>
         </div>
     );
 }
