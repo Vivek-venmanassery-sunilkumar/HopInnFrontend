@@ -9,7 +9,7 @@ import PropertyMap from '@/components/home-page/PropertyMap'
 import { useSearchProperties, useSearchGuides } from '@/hooks/HomePageFilterHook'
 import { useState, useEffect } from 'react'
 import { ChevronDown, User, Home, MapPin, Settings, LogOut, Plus, Shield } from 'lucide-react'
-import { fetchUserRoles, logoutUser } from '@/redux/slices/authSlice'
+import { logoutUser } from '@/redux/slices/authSlice'
 import { setSearchFilters, setSearchResults, setSearchLoading, setSearchError, clearSearch, loadFiltersFromStorage } from '@/redux/slices/searchSlice'
 
 export default function HomePage() {
@@ -157,7 +157,6 @@ export default function HomePage() {
                                 ) : (
                                     <Button
                                         onClick={() => {
-                                            dispatch(fetchUserRoles())
                                             navigate("/registration?type=host")
                                         }}
                                         className="bg-[#F68241] hover:bg-[#E5732A] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
@@ -179,7 +178,6 @@ export default function HomePage() {
                                 ) : (
                                     <Button
                                         onClick={() => {
-                                            dispatch(fetchUserRoles())
                                             navigate("/registration?type=guide")
                                         }}
                                         className="bg-[#F3CA62] hover:bg-[#E4BA52] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
@@ -232,7 +230,7 @@ export default function HomePage() {
                                             <button
                                                 onClick={() => {
                                                     dispatch(logoutUser())
-                                                    navigate("/login")
+                                                    navigate("/auth")
                                                     setShowUserMenu(false)
                                                 }}
                                                 className="w-full flex items-center gap-3 px-3 py-2 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"

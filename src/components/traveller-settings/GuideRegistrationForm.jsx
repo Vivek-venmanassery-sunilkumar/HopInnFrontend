@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import AddressForm from '../common/AddressForm';
 import { useGuideOnboard } from '@/hooks/GuideHooks';
 import { useDispatch } from 'react-redux';
-import { fetchUserRoles } from '@/redux/slices/authSlice';
 import GuideFormFields from '../common/GuideFormFields';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -37,8 +36,6 @@ export default function GuideRegistrationForm() {
     console.log('Guide Registration:', data);
     const response = await onboardGuide(data, {
       onSuccess: async ()=>{
-        // Dispatch the thunk to refresh user roles 
-        await dispatch(fetchUserRoles()).unwrap()
         navigate('/guide-settings')
       }
     });
