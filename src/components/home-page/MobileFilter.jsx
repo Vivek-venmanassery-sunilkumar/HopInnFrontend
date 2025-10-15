@@ -120,6 +120,12 @@ const MobileFilter = ({ onFilter, onClear, isLoading = false, initialValues = {}
       latitude: suggestion.center[1],
       longitude: suggestion.center[0]
     })
+    
+    // Preserve other form fields when selecting a destination
+    setValue('fromDate', watch('fromDate') || '')
+    setValue('toDate', watch('toDate') || '')
+    setValue('guests', watch('guests') || 1)
+    
     setShowSuggestions(false)
     setDestinationSuggestions([])
     setActiveFilter(null)
@@ -133,6 +139,12 @@ const MobileFilter = ({ onFilter, onClear, isLoading = false, initialValues = {}
       setSelectedDestination('')
       setSelectedCoordinates(null)
     }
+    
+    // Ensure other form fields are preserved when destination changes
+    // This prevents date fields from being cleared when destination is modified
+    setValue('fromDate', watch('fromDate') || '')
+    setValue('toDate', watch('toDate') || '')
+    setValue('guests', watch('guests') || 1)
   }
 
   const formatDate = (dateString) => {
@@ -255,10 +267,75 @@ const MobileFilter = ({ onFilter, onClear, isLoading = false, initialValues = {}
 
   const onSubmit = (data) => {
     const createUTCDate = (dateString) => {
-      if (!dateString) return null
-      const [year, month, day] = dateString.split('-').map(Number)
-      const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
-      return date.toISOString()
+      if (!dateString || dateString.trim() === '') return null
+      
+      try {
+        let date
+        
+        // Handle different date formats
+        if (dateString.includes('T') && dateString.includes('Z')) {
+          // Handle ISO string format (2025-10-15T00:00:00.000Z)
+          date = new Date(dateString)
+        } else if (dateString.includes('-') && dateString.length === 10) {
+          // Handle YYYY-MM-DD format
+          const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+          if (!dateRegex.test(dateString)) {
+            console.warn('Invalid date format:', dateString)
+            return null
+          }
+          
+          const [year, month, day] = dateString.split('-').map(Number)
+          
+          // Validate date components
+          if (isNaN(year) || isNaN(month) || isNaN(day)) {
+            console.warn('Invalid date components:', { year, month, day })
+            return null
+          }
+          
+          // Validate date range
+          if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+            console.warn('Date out of valid range:', { year, month, day })
+            return null
+          }
+          
+          // Create date in UTC to avoid timezone shifts
+          date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+        } else {
+          // Try to parse as a general date string
+          date = new Date(dateString)
+        }
+        
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+          console.warn('Invalid date created:', dateString)
+          return null
+        }
+        
+        return date.toISOString()
+      } catch (error) {
+        console.warn('Error creating date:', error, dateString)
+        return null
+      }
+    }
+
+    // Check if this is a "show all" search (no specific filters)
+    const isShowAllSearch = !data.destination && !data.fromDate && !data.toDate && (!data.guests || data.guests === 1)
+
+    // If not a "show all" search, validate that all required fields are filled
+    if (!isShowAllSearch) {
+      const hasDestination = data.destination && data.destination.trim() !== ''
+      const hasFromDate = data.fromDate && data.fromDate.trim() !== ''
+      const hasToDate = data.toDate && data.toDate.trim() !== ''
+      
+      if (!hasDestination || !hasFromDate || !hasToDate) {
+        console.warn('❌ Missing required fields for search:', {
+          destination: hasDestination,
+          fromDate: hasFromDate,
+          toDate: hasToDate
+        })
+        alert('Please fill in all required fields: destination, check-in date, and check-out date.')
+        return
+      }
     }
 
     const filterData = {
@@ -271,8 +348,12 @@ const MobileFilter = ({ onFilter, onClear, isLoading = false, initialValues = {}
       infantCount: infantCount,
       latitude: selectedCoordinates?.latitude || null,
       longitude: selectedCoordinates?.longitude || null,
-      children_onboard: (childrenCount > 0 || infantCount > 0)
+      children_onboard: (childrenCount > 0 || infantCount > 0),
+      all: isShowAllSearch // Add all parameter to indicate if this is a "show all" search
     }
+    
+    console.log('Mobile filter data being sent:', filterData)
+    console.log('Is show all search:', isShowAllSearch)
     
     onFilter(filterData)
     setActiveFilter(null)

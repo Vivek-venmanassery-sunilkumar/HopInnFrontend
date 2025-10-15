@@ -17,6 +17,42 @@ const PropertyBookingForm = ({
     const [adultCount, setAdultCount] = useState(initialValues.adultCount || 1)
     const [childrenCount, setChildrenCount] = useState(initialValues.childrenCount || 0)
     const [infantCount, setInfantCount] = useState(initialValues.infantCount || 0)
+
+    // Update state when initialValues change
+    useEffect(() => {
+        if (initialValues.checkIn || initialValues.checkOut) {
+            // Validate that pre-filled dates are not in the past
+            const today = new Date().toISOString().split('T')[0]
+            const checkInDate = initialValues.checkIn || ''
+            const checkOutDate = initialValues.checkOut || ''
+            
+            // Only set dates if they are today or in the future
+            if (checkInDate >= today && checkOutDate >= today) {
+                setSelectedDates({
+                    checkIn: checkInDate,
+                    checkOut: checkOutDate
+                })
+            } else {
+                // Clear dates if they are in the past
+                setSelectedDates({
+                    checkIn: '',
+                    checkOut: ''
+                })
+            }
+        }
+        if (initialValues.guests) {
+            setGuests(initialValues.guests)
+        }
+        if (initialValues.adultCount) {
+            setAdultCount(initialValues.adultCount)
+        }
+        if (initialValues.childrenCount !== undefined) {
+            setChildrenCount(initialValues.childrenCount)
+        }
+        if (initialValues.infantCount !== undefined) {
+            setInfantCount(initialValues.infantCount)
+        }
+    }, [initialValues])
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [showGuestsPicker, setShowGuestsPicker] = useState(false)
     const datePickerRef = useRef(null)
@@ -89,7 +125,20 @@ const PropertyBookingForm = ({
     }
 
     const handleSubmit = () => {
-        if (!selectedDates.checkIn || !selectedDates.checkOut) return
+        // Validate that dates are selected
+        if (!selectedDates.checkIn || !selectedDates.checkOut) {
+            alert('Please select both check-in and check-out dates before proceeding.')
+            return
+        }
+        
+        // Validate that check-out is after check-in
+        const checkInDate = new Date(selectedDates.checkIn)
+        const checkOutDate = new Date(selectedDates.checkOut)
+        
+        if (checkOutDate <= checkInDate) {
+            alert('Check-out date must be after check-in date.')
+            return
+        }
         
         const bookingData = {
             checkIn: selectedDates.checkIn,
@@ -106,6 +155,9 @@ const PropertyBookingForm = ({
     }
 
     const isBookingValid = selectedDates.checkIn && selectedDates.checkOut && guests > 0
+    
+    // Check if dates are pre-filled from search filters
+    const hasPreFilledDates = initialValues.checkIn && initialValues.checkOut
 
     return (
         <div className="bg-white rounded-xl shadow-lg border p-6">
@@ -119,6 +171,18 @@ const PropertyBookingForm = ({
                     <span className="text-sm font-medium text-gray-700">Prices include all fees</span>
                 </div>
             </div>
+
+            {/* Pre-filled Dates Indicator */}
+            {hasPreFilledDates && (
+                <div className="mb-6 p-3 bg-gradient-to-r from-[#F68241]/10 to-[#F3CA62]/10 border border-[#F68241]/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-[#F68241]" />
+                        <span className="text-sm font-medium text-[#2D5016]">
+                            Dates pre-filled from your search
+                        </span>
+                    </div>
+                </div>
+            )}
 
             {/* Price Display */}
             <div className="flex items-center justify-between mb-6">

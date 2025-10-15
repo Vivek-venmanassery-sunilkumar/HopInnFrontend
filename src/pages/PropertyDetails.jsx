@@ -1,20 +1,42 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useGetPropertyById } from '@/hooks/PropertyHooks'
-import { ArrowLeft, MapPin, Users, Bed, IndianRupee, Star, Wifi, Car, Coffee, Utensils, Waves, Mountain, Home, Shield, Heart, Calendar, Send } from 'lucide-react'
+import { ArrowLeft, MapPin, Users, Bed, IndianRupee, Share2, Wifi, Car, Coffee, Utensils, Waves, Mountain, Home, Shield, Heart, Calendar, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import HotelFillingLoader from '@/components/ui/HotelFillingLoader'
 import NotFound from '@/components/common/NotFound'
 import PropertyMap from '@/components/home-page/PropertyMap'
 import PropertyBookingForm from '@/components/booking/PropertyBookingForm'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 
 export default function PropertyDetails() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const locationState = useLocation()
     const { data: propertyData, isLoading, error } = useGetPropertyById(id)
     const user = useSelector(state => state.auth.user)
     const [isBookingLoading, setIsBookingLoading] = useState(false)
+    
+    // Get search filters from navigation state
+    const searchFilters = locationState.state?.searchFilters || null
+    const hasActiveSearch = locationState.state?.hasActiveSearch || false
+    
+    // Prepare initial values for PropertyBookingForm
+    const [initialBookingValues, setInitialBookingValues] = useState({})
+    
+    useEffect(() => {
+        if (searchFilters && hasActiveSearch) {
+            // Convert search filters to booking form format
+            setInitialBookingValues({
+                checkIn: searchFilters.fromDate || '',
+                checkOut: searchFilters.toDate || '',
+                guests: searchFilters.guests || 1,
+                adultCount: searchFilters.adultCount || 1,
+                childrenCount: searchFilters.childrenCount || 0,
+                infantCount: searchFilters.infantCount || 0
+            })
+        }
+    }, [searchFilters, hasActiveSearch])
 
     const handleBookingSubmit = async (bookingData) => {
         setIsBookingLoading(true)
@@ -142,11 +164,7 @@ export default function PropertyDetails() {
                     </Button>
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" className="text-gray-600 hover:text-[#F68241]">
-                            <Heart className="h-4 w-4 mr-2" />
-                            Save
-                        </Button>
-                        <Button variant="ghost" className="text-gray-600 hover:text-[#F68241]">
-                            <Star className="h-4 w-4 mr-2" />
+                            <Share2 className="h-4 w-4 mr-2" />
                             Share
                         </Button>
                     </div>
@@ -326,6 +344,7 @@ export default function PropertyDetails() {
                                     property={property}
                                     onBookingSubmit={handleBookingSubmit}
                                     isLoading={isBookingLoading}
+                                    initialValues={initialBookingValues}
                                 />
                             </div>
                         </div>

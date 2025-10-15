@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { MapPin, Users, IndianRupee } from 'lucide-react';
 
 export default function PropertyCard({ property }) {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
+  const searchState = useSelector((state) => state.search);
   
   // Get primary image URL from the API response
   const primaryImage = property.primaryImageUrl || '';
@@ -13,7 +15,16 @@ export default function PropertyCard({ property }) {
   const location = `${property.district}, ${property.state}`;
 
   const handleCardClick = () => {
-    navigate(`/property/${property.id}`);
+    // Pass search filters as state to PropertyDetails
+    const searchFilters = searchState.searchFilters;
+    const hasActiveSearch = searchState.hasActiveSearch;
+    
+    navigate(`/property/${property.id}`, {
+      state: {
+        searchFilters: hasActiveSearch ? searchFilters : null,
+        hasActiveSearch
+      }
+    });
   };
 
   return (

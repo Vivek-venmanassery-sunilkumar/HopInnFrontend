@@ -73,6 +73,11 @@ const BookingDatePicker = ({
     }
 
     const handleDateClick = (date) => {
+        // Don't allow selection of dates before today
+        if (isDateDisabled(date)) {
+            return
+        }
+        
         if (!isSelecting) {
             // Start selection
             setStartDate(date)
@@ -93,8 +98,8 @@ const BookingDatePicker = ({
 
     const handleDateHover = (date) => {
         if (isSelecting && startDate && !endDate) {
-            // Show preview of selection
-            if (date >= startDate) {
+            // Show preview of selection only if date is not disabled
+            if (date >= startDate && !isDateDisabled(date)) {
                 setEndDate(date)
             }
         }
@@ -130,7 +135,15 @@ const BookingDatePicker = ({
     }
 
     const isDateDisabled = (date) => {
-        return date < today.setHours(0, 0, 0, 0)
+        // Create a clean today date for comparison
+        const todayClean = new Date()
+        todayClean.setHours(0, 0, 0, 0)
+        
+        // Create a clean date for comparison
+        const dateClean = new Date(date)
+        dateClean.setHours(0, 0, 0, 0)
+        
+        return dateClean < todayClean
     }
 
     const formatMonthYear = (date) => {
@@ -160,6 +173,13 @@ const BookingDatePicker = ({
                         <X className="h-5 w-5 text-gray-500" />
                     </button>
                 </div>
+            </div>
+
+            {/* Date Restriction Notice */}
+            <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-700 text-center">
+                    You can only select dates from today onwards
+                </p>
             </div>
 
             {/* Month Navigation */}
@@ -208,7 +228,7 @@ const BookingDatePicker = ({
                             className={`
                                 h-8 w-8 text-sm rounded-full transition-all duration-200 flex items-center justify-center
                                 ${isDisabled 
-                                    ? 'text-gray-300 cursor-not-allowed' 
+                                    ? 'text-gray-300 cursor-not-allowed bg-gray-50' 
                                     : 'hover:bg-gray-100 cursor-pointer'
                                 }
                                 ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}

@@ -53,6 +53,11 @@ export default function HomePage() {
         pageSize: pageSize
     }
     
+    console.log('🔍 Search params:', searchParams)
+    console.log('🔍 Initial load:', initialLoad)
+    console.log('🔍 Has active search:', hasActiveSearch)
+    console.log('🔍 Search filters:', searchFilters)
+    
     const { data: propertiesData, isLoading: isPropertiesLoading, error: propertiesError } = useSearchProperties(
         searchParams, 
         true
@@ -85,10 +90,12 @@ export default function HomePage() {
     }, [hasActiveSearch])
 
     const handleFilter = (filterData) => {
+        console.log('🏠 handleFilter called with:', filterData)
         setInitialLoad(false)
         setCurrentPage(1) // Reset to first page when filtering
         // Save filters to Redux state
         dispatch(setSearchFilters(filterData))
+        console.log('✅ Filters saved to Redux state')
     }
 
     const handlePageChange = (page) => {
