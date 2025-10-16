@@ -10,6 +10,7 @@ import { TravellerProtectedRoute, AdminProtectedRoute, HomePage, TravellerSettin
   RegistrationForm, GuideSettings, GuideProtectedRoute, HostProtectedRoute, HostSettings} from '@/routes'
 import PropertyDetails from './pages/PropertyDetails'
 import GuideDetails from './pages/GuideDetails'
+import PropertyBookingConfirmationPage from './pages/PropertyBookingConfirmationPage'
 import NotFound from './components/common/NotFound'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
@@ -86,6 +87,14 @@ function App() {
               element={
                 <TravellerProtectedRoute>
                   <GuideDetails />
+                </TravellerProtectedRoute>
+              }
+            />
+            <Route
+              path="/booking-confirmation"
+              element={
+                <TravellerProtectedRoute>
+                  <PropertyBookingConfirmationPage />
                 </TravellerProtectedRoute>
               }
             />

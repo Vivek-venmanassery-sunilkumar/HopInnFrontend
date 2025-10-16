@@ -18,7 +18,7 @@ const PropertyBookingForm = ({
     const [childrenCount, setChildrenCount] = useState(initialValues.childrenCount || 0)
     const [infantCount, setInfantCount] = useState(initialValues.infantCount || 0)
 
-    // Update state when initialValues change
+    // Update state when initialValues change (only on mount or when initialValues actually change)
     useEffect(() => {
         if (initialValues.checkIn || initialValues.checkOut) {
             // Validate that pre-filled dates are not in the past
@@ -53,6 +53,7 @@ const PropertyBookingForm = ({
             setInfantCount(initialValues.infantCount)
         }
     }, [initialValues])
+    
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [showGuestsPicker, setShowGuestsPicker] = useState(false)
     const datePickerRef = useRef(null)
@@ -353,7 +354,7 @@ const PropertyBookingForm = ({
                     )}
                 </div>
 
-                {/* Price Summary */}
+            {/* Price Summary */}
                 {isBookingValid && (
                     <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                         <div className="flex justify-between text-sm">

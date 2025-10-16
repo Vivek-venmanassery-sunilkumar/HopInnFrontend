@@ -113,9 +113,17 @@ const BookingDatePicker = ({
 
     const confirmSelection = () => {
         if (startDate && endDate) {
+            // Use timezone-safe date formatting to avoid UTC conversion issues
+            const formatDate = (date) => {
+                const year = date.getFullYear()
+                const month = String(date.getMonth() + 1).padStart(2, '0')
+                const day = String(date.getDate()).padStart(2, '0')
+                return `${year}-${month}-${day}`
+            }
+            
             onDateChange({
-                checkIn: startDate.toISOString().split('T')[0],
-                checkOut: endDate.toISOString().split('T')[0]
+                checkIn: formatDate(startDate),
+                checkOut: formatDate(endDate)
             })
             onClose()
         }
@@ -154,48 +162,39 @@ const BookingDatePicker = ({
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 w-80">
+        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-3 w-64">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Select dates</h3>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={clearSelection}
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        title="Clear selection"
-                    >
-                        <X className="h-4 w-4 text-gray-500" />
-                    </button>
-                    <button
-                        onClick={onClose}
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                        <X className="h-5 w-5 text-gray-500" />
-                    </button>
-                </div>
+            <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold text-gray-900">Select dates</h3>
+                <button
+                    onClick={onClose}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                    <X className="h-4 w-4 text-gray-500" />
+                </button>
             </div>
 
             {/* Date Restriction Notice */}
-            <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-700 text-center">
                     You can only select dates from today onwards
                 </p>
             </div>
 
             {/* Month Navigation */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
                 <button
                     onClick={() => navigateMonth(-1)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                 >
                     <ChevronLeft className="h-4 w-4 text-gray-600" />
                 </button>
-                <h4 className="text-lg font-medium text-gray-900">
+                <h4 className="text-sm font-medium text-gray-900">
                     {formatMonthYear(currentMonth)}
                 </h4>
                 <button
                     onClick={() => navigateMonth(1)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                 >
                     <ChevronRight className="h-4 w-4 text-gray-600" />
                 </button>
@@ -204,7 +203,7 @@ const BookingDatePicker = ({
             {/* Days of Week */}
             <div className="grid grid-cols-7 gap-1 mb-2">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                    <div key={index} className="text-center text-sm font-medium text-gray-500 py-2">
+                    <div key={index} className="text-center text-xs font-medium text-gray-500 py-1">
                         {day}
                     </div>
                 ))}
@@ -226,7 +225,7 @@ const BookingDatePicker = ({
                             onMouseEnter={() => !isDisabled && handleDateHover(day.date)}
                             disabled={isDisabled}
                             className={`
-                                h-8 w-8 text-sm rounded-full transition-all duration-200 flex items-center justify-center
+                                h-7 w-7 text-xs rounded-full transition-all duration-200 flex items-center justify-center
                                 ${isDisabled 
                                     ? 'text-gray-300 cursor-not-allowed bg-gray-50' 
                                     : 'hover:bg-gray-100 cursor-pointer'
@@ -253,40 +252,20 @@ const BookingDatePicker = ({
                 })}
             </div>
 
-            {/* Selection Summary */}
-            {startDate && endDate && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-600">
-                        <div className="flex justify-between">
-                            <span>Check-in:</span>
-                            <span className="font-medium">{startDate.toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Check-out:</span>
-                            <span className="font-medium">{endDate.toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex justify-between font-semibold text-[#F68241]">
-                            <span>Nights:</span>
-                            <span>{Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))}</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Action Buttons */}
             <div className="flex gap-2 mt-4">
                 <button
                     onClick={onClose}
-                    className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                     Cancel
                 </button>
                 <button
                     onClick={confirmSelection}
                     disabled={!startDate || !endDate}
-                    className="flex-1 px-4 py-2 bg-[#F68241] text-white rounded-lg hover:bg-[#E67332] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 px-4 py-2 text-sm font-semibold bg-[#F68241] text-white rounded-lg hover:bg-[#E67332] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                    Confirm
+                    {startDate && endDate ? `Confirm (${Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))} nights)` : 'Select Dates'}
                 </button>
             </div>
         </div>

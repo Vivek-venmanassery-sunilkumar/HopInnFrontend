@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useGetPropertyById } from '@/hooks/PropertyHooks'
+import { useCheckPropertyBooking } from '@/hooks/BookingsHooks'
 import { ArrowLeft, MapPin, Users, Bed, IndianRupee, Share2, Wifi, Car, Coffee, Utensils, Waves, Mountain, Home, Shield, Heart, Calendar, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import HotelFillingLoader from '@/components/ui/HotelFillingLoader'
@@ -7,7 +8,8 @@ import NotFound from '@/components/common/NotFound'
 import PropertyMap from '@/components/home-page/PropertyMap'
 import PropertyBookingForm from '@/components/booking/PropertyBookingForm'
 import { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { setSearchFilters, loadFiltersFromStorage } from '@/redux/slices/searchSlice'
 
 export default function PropertyDetails() {
     const { id } = useParams()
@@ -15,40 +17,102 @@ export default function PropertyDetails() {
     const locationState = useLocation()
     const { data: propertyData, isLoading, error } = useGetPropertyById(id)
     const user = useSelector(state => state.auth.user)
+    const searchState = useSelector(state => state.search)
+    const dispatch = useDispatch()
     const [isBookingLoading, setIsBookingLoading] = useState(false)
     
-    // Get search filters from navigation state
-    const searchFilters = locationState.state?.searchFilters || null
-    const hasActiveSearch = locationState.state?.hasActiveSearch || false
+    // Booking check mutation
+    const checkBookingMutation = useCheckPropertyBooking()
+    
+    // Always use Redux state for search filters (most up-to-date)
+    const searchFilters = searchState.searchFilters
+    const hasActiveSearch = searchState.hasActiveSearch
+    
+    
+    // Note: loadFiltersFromStorage is already called in HomePage component
+    // No need to call it here as it might override the current Redux state
     
     // Prepare initial values for PropertyBookingForm
     const [initialBookingValues, setInitialBookingValues] = useState({})
     
+    // Update initial values when search filters change or component mounts
     useEffect(() => {
-        if (searchFilters && hasActiveSearch) {
+        if (searchFilters) {
             // Convert search filters to booking form format
-            setInitialBookingValues({
+            const newInitialValues = {
                 checkIn: searchFilters.fromDate || '',
                 checkOut: searchFilters.toDate || '',
                 guests: searchFilters.guests || 1,
                 adultCount: searchFilters.adultCount || 1,
                 childrenCount: searchFilters.childrenCount || 0,
                 infantCount: searchFilters.infantCount || 0
-            })
+            }
+            setInitialBookingValues(newInitialValues)
         }
-    }, [searchFilters, hasActiveSearch])
+    }, [searchFilters])
+    
+    // Create a key that changes when search filters change to force PropertyBookingForm re-mount
+    const bookingFormKey = `${searchFilters?.fromDate || ''}-${searchFilters?.toDate || ''}-${searchFilters?.guests || 1}-${searchFilters?.adultCount || 1}-${searchFilters?.childrenCount || 0}-${searchFilters?.infantCount || 0}`
+
 
     const handleBookingSubmit = async (bookingData) => {
         setIsBookingLoading(true)
         try {
-            // TODO: Implement booking submission logic
-            console.log('Booking data:', bookingData)
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            alert('Booking request sent successfully!')
+            // Update filter data in localStorage with new booking details
+            const updatedFilterData = {
+                fromDate: bookingData.checkIn,
+                toDate: bookingData.checkOut,
+                guests: bookingData.guests,
+                adultCount: bookingData.adultCount,
+                childrenCount: bookingData.childrenCount,
+                infantCount: bookingData.infantCount
+            }
+            
+            // Dispatch to update Redux state and localStorage
+            dispatch(setSearchFilters(updatedFilterData))
+
+            // Prepare booking check data for API
+            const bookingCheckData = {
+                propertyId: parseInt(id),
+                numAdults: bookingData.adultCount,
+                numChildren: bookingData.childrenCount,
+                numInfants: bookingData.infantCount,
+                checkInDate: bookingData.checkIn,
+                checkOutDate: bookingData.checkOut
+            }
+            
+            // Trigger booking check mutation
+            checkBookingMutation.mutate(bookingCheckData, {
+                onSuccess: (data) => {
+                    // Navigate to confirmation page with booking data
+                    const navigationState = {
+                        bookingData: {
+                            checkIn: bookingData.checkIn,
+                            checkOut: bookingData.checkOut,
+                            guests: bookingData.guests,
+                            adultCount: bookingData.adultCount,
+                            childrenCount: bookingData.childrenCount,
+                            infantCount: bookingData.infantCount,
+                            nights: bookingData.nights,
+                            totalPrice: bookingData.totalPrice
+                        },
+                        property: property,
+                        calculatedAmount: data.amount,
+                        previousResponse: data // Pass the full response for guest details
+                    }
+                    
+                    navigate('/booking-confirmation', {
+                        state: navigationState
+                    })
+                },
+                onError: (error) => {
+                    console.error('Booking check failed:', error)
+                    // The error toast is already handled by the hook
+                }
+            })
         } catch (error) {
             console.error('Booking error:', error)
-            alert('Failed to send booking request. Please try again.')
+            alert('Failed to process booking request. Please try again.')
         } finally {
             setIsBookingLoading(false)
         }
@@ -339,13 +403,16 @@ export default function PropertyDetails() {
                     {/* Booking Sidebar - Only show if user is not the host */}
                     {!isHost && (
                         <div className="lg:col-span-1">
-                            <div className="sticky top-8">
-                                <PropertyBookingForm
-                                    property={property}
-                                    onBookingSubmit={handleBookingSubmit}
-                                    isLoading={isBookingLoading}
-                                    initialValues={initialBookingValues}
-                                />
+                            <div className="sticky top-4">
+                                <div className="w-full">
+                                    <PropertyBookingForm
+                                        key={bookingFormKey}
+                                        property={property}
+                                        onBookingSubmit={handleBookingSubmit}
+                                        isLoading={isBookingLoading || checkBookingMutation.isPending}
+                                        initialValues={initialBookingValues}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
