@@ -8,6 +8,7 @@ import { fetchUserRoles } from '@/redux/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { VALIDATION_PATTERNS } from '@/constants/validation';
 import { GoogleLogin } from '@react-oauth/google';
+import { useState } from 'react';
 
 export default function LoginForm() {
     const { register, handleSubmit, formState: { errors } } = useForm();
@@ -15,6 +16,7 @@ export default function LoginForm() {
     const {mutateAsync: googleLogin, isPending: isGoogleLoading}= useGoogleLogin()
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [isGoogleLoginInProgress, setIsGoogleLoginInProgress] = useState(false);
 
     //Get Google Client Id from env variables
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -34,6 +36,7 @@ export default function LoginForm() {
     };
 
     const handleGoogleSuccess = async (credentialResponse)=>{
+        setIsGoogleLoginInProgress(true);
         try{
             const response = await googleLogin({
                 token: credentialResponse.credential,
@@ -52,11 +55,14 @@ export default function LoginForm() {
             }
         }catch(error){
             console.error("Google login failed:",error)
+        }finally{
+            setIsGoogleLoginInProgress(false);
         }
     }
 
     const handleGoogleError = (e)=>{
         console.error("Google login failed")
+        setIsGoogleLoginInProgress(false);
     };
 
     return (
@@ -111,18 +117,27 @@ export default function LoginForm() {
 
             {/* Google Sign-In Button */}
             <div className="flex justify-center">
-                <GoogleLogin
-                    clientId={googleClientId}
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    useOneTap
-                    shape="rectangular"
-                    size="large"
-                    text="signin_with"
-                    theme="outline"
-                    width="300"
-                    flow='implicit'
-                />
+                {isGoogleLoginInProgress ? (
+                    <div className="w-full max-w-[300px] h-12 bg-gray-100 border border-gray-300 rounded-lg flex items-center justify-center">
+                        <div className="flex items-center space-x-3">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                            <span className="text-gray-600 font-medium">Signing in with Google...</span>
+                        </div>
+                    </div>
+                ) : (
+                    <GoogleLogin
+                        clientId={googleClientId}
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        useOneTap
+                        shape="rectangular"
+                        size="large"
+                        text="signin_with"
+                        theme="outline"
+                        width="300"
+                        flow='implicit'
+                    />
+                )}
             </div>
         </div>
     );
